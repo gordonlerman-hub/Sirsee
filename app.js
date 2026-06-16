@@ -1,14 +1,19 @@
 const state = {
   screen: "brief",
   brief: {
-    recipientName: "Emily",
+    recipientName: "Nora",
     recipientGender: "female",
     budget: 50,
     zipCode: "60614",
     likes: ["flowers", "coffee", "sweets"],
     customLike: ""
   },
-  selectedGiftId: null
+  selectedGiftId: null,
+  reminderDraft: {
+    email: "",
+    frequency: "quarterly"
+  },
+  reminders: []
 };
 
 const gifts = [
@@ -86,6 +91,11 @@ const gifts = [
 
 const app = document.querySelector("#app");
 const budgetOptions = [20, 50];
+const reminderFrequencyOptions = [
+  { id: "monthly", label: "Monthly", summary: "every month" },
+  { id: "quarterly", label: "Quarterly", summary: "every 3 months" },
+  { id: "biannual", label: "Twice a year", summary: "every 6 months" }
+];
 const chicagolandZipPattern = /^60[0-8]\d{2}$/;
 const genderOptions = [
   { id: "female", label: "Female", summary: "Shopping for her", defaults: ["flowers", "coffee", "sweets"] },
@@ -138,6 +148,7 @@ function topbar() {
 function screen() {
   if (state.screen === "results") return resultsScreen();
   if (state.screen === "detail") return detailScreen();
+  if (state.screen === "reminders") return remindersScreen();
   return briefScreen();
 }
 
@@ -158,6 +169,8 @@ function briefScreen() {
         </div>
         <img class="brief-visual" src="./assets/hero.png" alt="" />
       </div>
+
+      ${savedRemindersPreview()}
 
       <form class="brief-panel" data-brief-form>
         <div class="section-heading">
@@ -219,6 +232,8 @@ function resultsScreen() {
           ${backups.map(backupCard).join("")}
         </div>
       </section>
+
+      ${reminderPanel()}
     </section>
   `;
 }
@@ -260,6 +275,164 @@ function detailScreen() {
       </div>
     </section>
   `;
+}
+
+function remindersScreen() {
+  return `
+    <section class="reminders-screen">
+      <div class="section-heading">
+        <p class="eyebrow">Recurring reminders</p>
+        <h1>People you are keeping on your radar.</h1>
+        <p>Sirsee will nudge you on a schedule with fresh local gift ideas matched to each brief.</p>
+      </div>
+      ${state.reminders.length ? reminderList(state.reminders) : emptyRemindersState()}
+      <button class="secondary" type="button" data-go="brief">Start a new brief</button>
+    </section>
+  `;
+}
+
+function reminderPanel() {
+  const name = state.brief.recipientName.trim() || "them";
+  const existing = reminderForRecipient(name);
+
+  if (existing) {
+    return `
+      <section class="reminder-panel reminder-panel--saved" aria-label="Recurring reminder for ${escapeHtml(name)}">
+        <div class="section-heading">
+          <p class="eyebrow">Recurring reminder</p>
+          <h2>We will check in for ${escapeHtml(name)}.</h2>
+        </div>
+        <p class="reminder-copy">
+          ${escapeHtml(frequencySummary(existing.frequency))} at <strong>${escapeHtml(existing.email)}</strong> with fresh Chicagoland picks using this brief.
+        </p>
+        <div class="action-row">
+          <button class="text-button" type="button" data-go="reminders">View all reminders</button>
+          <button class="secondary" type="button" data-remove-reminder="${escapeAttribute(name)}">Remove reminder</button>
+        </div>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="reminder-panel" aria-label="Set a recurring reminder for ${escapeHtml(name)}">
+      <div class="section-heading">
+        <p class="eyebrow">Keep the habit going</p>
+        <h2>Set a reminder for ${escapeHtml(name)}.</h2>
+        <p>Get a nudge on a schedule so spontaneous gifting does not slip. We will reuse this brief and send new local ideas each time.</p>
+      </div>
+      <form class="reminder-form" data-reminder-form>
+        <div class="field-grid">
+          <div class="field">
+            <label for="reminderEmail">Your email</label>
+            <input id="reminderEmail" class="input" data-reminder-email type="email" value="${escapeAttribute(state.reminderDraft.email)}" placeholder="you@example.com" autocomplete="email" />
+          </div>
+          <div class="field">
+            <span class="field-title">How often?</span>
+            <div class="segment-group reminder-frequency-group" role="group" aria-label="Reminder frequency">
+              ${reminderFrequencyOptions.map(reminderFrequencyButton).join("")}
+            </div>
+          </div>
+        </div>
+        <button class="primary full-width" type="submit">Set reminder for ${escapeHtml(name)}</button>
+        <p class="reminder-note">MVP demo only — no email is sent yet.</p>
+      </form>
+    </section>
+  `;
+}
+
+function savedRemindersPreview() {
+  if (!state.reminders.length) return "";
+
+  return `
+    <aside class="saved-reminders" aria-label="Saved recurring reminders">
+      <div class="saved-reminders-header">
+        <p class="eyebrow">Your reminders</p>
+        <button class="text-button" type="button" data-go="reminders">View all</button>
+      </div>
+      ${reminderList(state.reminders.slice(0, 2))}
+    </aside>
+  `;
+}
+
+function reminderList(reminders) {
+  return `
+    <ul class="reminder-list">
+      ${reminders.map(reminderListItem).join("")}
+    </ul>
+  `;
+}
+
+function reminderListItem(reminder) {
+  return `
+    <li class="reminder-card">
+      <div>
+        <h3>${escapeHtml(reminder.recipientName)}</h3>
+        <p class="reminder-meta">${escapeHtml(frequencySummary(reminder.frequency))} · ${escapeHtml(reminder.email)}</p>
+        <p class="reminder-meta">${escapeHtml(reminderBriefSummary(reminder))}</p>
+      </div>
+      <button class="text-button" type="button" data-remove-reminder="${escapeAttribute(reminder.recipientName)}">Remove</button>
+    </li>
+  `;
+}
+
+function emptyRemindersState() {
+  return `
+    <div class="empty-reminders">
+      <p>No reminders yet. Find gift ideas for someone, then set a recurring nudge on the results screen.</p>
+    </div>
+  `;
+}
+
+function reminderFrequencyButton(option) {
+  const selected = state.reminderDraft.frequency === option.id;
+  return `
+    <button class="segment ${selected ? "is-selected" : ""}" type="button" data-reminder-frequency="${option.id}" aria-pressed="${selected}">
+      ${option.label}
+    </button>
+  `;
+}
+
+function reminderForRecipient(name) {
+  const normalized = name.trim().toLowerCase();
+  return state.reminders.find((reminder) => reminder.recipientName.trim().toLowerCase() === normalized);
+}
+
+function frequencySummary(frequencyId) {
+  return reminderFrequencyOptions.find((option) => option.id === frequencyId)?.summary || "on your schedule";
+}
+
+function reminderBriefSummary(reminder) {
+  return `Up to $${reminder.budget} · ZIP ${reminder.zipCode} · ${reminder.likesSummary}`;
+}
+
+function saveReminder() {
+  const recipientName = state.brief.recipientName.trim();
+  if (!recipientName || !state.reminderDraft.email.trim()) return;
+
+  const reminder = {
+    recipientName,
+    email: state.reminderDraft.email.trim(),
+    frequency: state.reminderDraft.frequency,
+    recipientGender: state.brief.recipientGender,
+    budget: state.brief.budget,
+    zipCode: state.brief.zipCode,
+    likes: [...state.brief.likes],
+    customLike: state.brief.customLike,
+    likesSummary: likesSummary(),
+    createdAt: new Date().toISOString()
+  };
+
+  state.reminders = [
+    ...state.reminders.filter((item) => item.recipientName.trim().toLowerCase() !== recipientName.toLowerCase()),
+    reminder
+  ];
+}
+
+function removeReminder(name) {
+  const normalized = name.trim().toLowerCase();
+  state.reminders = state.reminders.filter(
+    (reminder) => reminder.recipientName.trim().toLowerCase() !== normalized
+  );
 }
 
 function bestCard(gift) {
@@ -515,6 +688,35 @@ function bindEvents() {
       render();
     });
   });
+
+  document.querySelectorAll("[data-reminder-frequency]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.reminderDraft.frequency = button.dataset.reminderFrequency;
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-reminder-email]").forEach((field) => {
+    field.addEventListener("input", () => {
+      state.reminderDraft.email = field.value;
+    });
+  });
+
+  document.querySelectorAll("[data-remove-reminder]").forEach((button) => {
+    button.addEventListener("click", () => {
+      removeReminder(button.dataset.removeReminder);
+      render();
+    });
+  });
+
+  const reminderForm = document.querySelector("[data-reminder-form]");
+  if (reminderForm) {
+    reminderForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      saveReminder();
+      render();
+    });
+  }
 
   const form = document.querySelector("[data-brief-form]");
   if (form) {
