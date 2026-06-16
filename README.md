@@ -1,6 +1,6 @@
 # Sirsee MVP
 
-Sirsee is a clickable mobile-first MVP for a Chicago-focused gift reminder and local gift curation app.
+Sirsee is a clickable mobile-first MVP for spontaneous small local gift giving, starting with a Chicagoland pilot focused on artisanal shops with delivery-capable gift ideas.
 
 ## Run locally
 
@@ -17,5 +17,6 @@ Then open `http://localhost:4173`.
 ## MVP boundaries
 
 - Demo data only.
+- All proposed mock gift ideas should include a merchant delivery or shipping option.
 - No real accounts, payments, reminder emails, merchant inventory, or delivery coordination.
-- Merchant actions link out to web search pages for representative Chicago businesses.
+- Merchant actions link out to official merchant product, category, or shopping pages for representative Chicagoland businesses.

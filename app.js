@@ -1,80 +1,72 @@
 const state = {
-  step: "welcome",
-  profile: {
-    wifeName: "Emily",
-    neighborhood: "Lincoln Park",
-    email: "you@example.com",
-    cadence: "Quarterly",
+  screen: "brief",
+  brief: {
+    recipientName: "Emily",
+    recipientGender: "female",
     budget: 50,
-    categories: ["Flowers", "Sweets", "Local goods"],
-    colors: ["Green", "Warm neutrals"],
-    treats: "Dark chocolate, almond croissants, and good coffee",
-    hobbies: "Reading, Saturday walks, cooking",
-    dislikes: "Anything too flashy",
-    delivery: "Pickup or local delivery",
-    lastGift: "A candle from a boutique"
+    zipCode: "60614",
+    likes: ["flowers", "coffee", "sweets"],
+    customLike: ""
   },
-  selectedGiftId: null,
-  saved: [],
-  toastMessage: ""
+  selectedGiftId: null
 };
 
 const gifts = [
   {
     id: "blooms",
-    name: "Petite seasonal bouquet",
-    merchant: "Pollen Floral Design",
-    neighborhood: "Logan Square",
-    price: 42,
+    name: "Farm-grown seasonal bouquet",
+    merchant: "Southside Blooms",
+    neighborhood: "Englewood",
+    price: 50,
     category: "Flowers",
     image: "./assets/flowers.png",
-    link: "https://www.google.com/search?q=Pollen+Floral+Design+Chicago",
-    pickup: "Local pickup or delivery window",
-    tags: ["classic", "low effort", "same-week"],
+    link: "https://southsideblooms.com/",
+    delivery: "Chicago delivery available through the merchant",
+    tags: ["delivery", "urban farm", "mission-driven"],
     reason:
-      "A smaller arrangement keeps the gesture confident and casual, with enough polish to feel intentional."
+      "it feels personal without being formal, and it comes from a distinctive Chicago grower instead of a generic flower chain."
   },
   {
-    id: "bakery",
-    name: "Croissant box and coffee beans",
-    merchant: "Lost Larson",
-    neighborhood: "Andersonville",
-    price: 36,
+    id: "truffles",
+    name: "Handmade truffle medley",
+    merchant: "Katherine Anne Confections",
+    neighborhood: "Logan Square / Irving Park",
+    price: 39,
     category: "Sweets",
     image: "./assets/bakery.png",
-    link: "https://www.google.com/search?q=Lost+Larson+Chicago",
-    pickup: "Best for morning pickup",
-    tags: ["morning pickup", "under $40", "easy win"],
+    link: "https://www.katherine-anne.com/truffles",
+    delivery: "Online ordering with shipping or local delivery options",
+    tags: ["delivery", "handmade", "Chicago confectioner"],
     reason:
-      "This fits her favorite treats without feeling like a big production. It turns an ordinary morning into a small occasion."
+      "the flavors feel crafted and specific, while the order still stays easy enough for a spontaneous gesture."
   },
   {
-    id: "book",
-    name: "Staff-pick paperback and note card",
-    merchant: "Women & Children First",
-    neighborhood: "Andersonville",
-    price: 31,
-    category: "Books",
+    id: "ceramic",
+    name: "Small ceramic bud vase",
+    merchant: "Neighborly",
+    neighborhood: "Lincoln Square",
+    price: 28,
+    category: "Local goods",
     image: "./assets/bookshop.png",
-    link: "https://www.google.com/search?q=Women+and+Children+First+Chicago+bookstore",
-    pickup: "Pickup friendly",
-    tags: ["reader", "personal", "easy pickup"],
+    link: "https://neighborlyshop.com/collections/home-decor",
+    delivery: "Ships from a Chicago shop",
+    tags: ["delivery", "artisan", "useful"],
     reason:
-      "Because she likes reading, a staff-picked paperback plus a short note feels specific without requiring you to know the perfect title."
+      "it is small, tactile, and quietly stylish, the kind of object that makes a shelf or desk feel more considered."
   },
   {
     id: "candle",
-    name: "Hand-poured candle and matchbox",
+    name: "Mini candle gift set trio",
     merchant: "Neighborly",
     neighborhood: "Lincoln Square",
     price: 48,
     category: "Local goods",
     image: "./assets/candle.png",
-    link: "https://www.google.com/search?q=Neighborly+Chicago+Lincoln+Square",
-    pickup: "Pickup or local shipping",
-    tags: ["home", "artisan", "giftable"],
+    link: "https://neighborlyshop.com/products/p-f-candle-greatest-hits-mini-candle-gift-set-trio",
+    delivery: "Ships from Neighborly",
+    tags: ["delivery", "home", "artisan"],
     reason:
-      "A warm home gift lands well when she likes simple, useful things and avoids anything too flashy."
+      "it lands as warm and thoughtful without feeling oversized, and the shop has a curated local-goods feel."
   },
   {
     id: "tea",
@@ -84,343 +76,466 @@ const gifts = [
     price: 45,
     category: "Coffee/tea",
     image: "./assets/tea.png",
-    link: "https://www.google.com/search?q=Rare+Tea+Cellar+Chicago",
-    pickup: "Ships locally; check pickup availability",
-    tags: ["quiet night", "foodie", "small luxury"],
+    link: "https://rareteacellar.com/products/master-tea-sampler",
+    delivery: "Ships from Rare Tea Cellar",
+    tags: ["delivery", "foodie", "small luxury"],
     reason:
-      "This is a relaxed evening gift, especially if she enjoys cooking and a calm ritual after a long day."
+      "it creates a relaxed evening ritual and feels more special than grabbing a bag from a national chain."
   }
 ];
 
 const app = document.querySelector("#app");
-
-function nextSirseeDate() {
-  const date = new Date();
-  date.setMonth(date.getMonth() + 3);
-  return date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
-}
-
-function visibleGifts() {
-  const max = Number(state.profile.budget);
-  return gifts.filter((gift) => gift.price <= max).slice(0, 5);
-}
+const budgetOptions = [20, 50];
+const chicagolandZipPattern = /^60[0-8]\d{2}$/;
+const genderOptions = [
+  { id: "female", label: "Female", summary: "Shopping for her", defaults: ["flowers", "coffee", "sweets"] },
+  { id: "male", label: "Male", summary: "Shopping for him", defaults: ["coffee", "sweets", "home"] }
+];
+const likeOptionsByGender = {
+  female: [
+    { id: "flowers", label: "Flowers or plants", image: "./assets/likes/flowers-plants.png", categories: ["Flowers"] },
+    { id: "sweets", label: "Chocolate & pastries", image: "./assets/likes/chocolate-pastries.png", categories: ["Sweets"] },
+    { id: "coffee", label: "Coffee or tea", image: "./assets/likes/coffee-tea.png", categories: ["Coffee/tea", "Sweets"] },
+    { id: "home", label: "Candles & home", image: "./assets/likes/candles-home.png", categories: ["Local goods"] },
+    { id: "spa", label: "Self-care", image: "./assets/likes/self-care.png", categories: ["Local goods"] },
+    { id: "foodie", label: "Foodie treats", image: "./assets/likes/foodie-treats.png", categories: ["Sweets", "Coffee/tea"] },
+    { id: "cozy", label: "Cozy night in", image: "./assets/likes/cozy-night.png", categories: ["Coffee/tea", "Local goods"] }
+  ],
+  male: [
+    { id: "coffee", label: "Coffee beans or tea", image: "./assets/likes/coffee-tea.png", categories: ["Coffee/tea", "Sweets"] },
+    { id: "sweets", label: "Bakery treats", image: "./assets/likes/chocolate-pastries.png", categories: ["Sweets"] },
+    { id: "home", label: "Home goods", image: "./assets/likes/home-goods.png", categories: ["Local goods"] },
+    { id: "plants", label: "Plants", image: "./assets/likes/flowers-plants.png", categories: ["Flowers"] },
+    { id: "snacks", label: "Snack run", image: "./assets/likes/snack-run.png", categories: ["Sweets"] },
+    { id: "bar", label: "Bar cart", image: "./assets/likes/bar-cart.png", categories: ["Coffee/tea", "Local goods"] },
+    { id: "desk", label: "Desk upgrade", image: "./assets/likes/desk-upgrade.png", categories: ["Local goods"] }
+  ]
+};
 
 function render() {
   app.innerHTML = `
     ${topbar()}
     ${screen()}
-    ${toast()}
   `;
   bindEvents();
 }
 
 function topbar() {
-  const steps = ["welcome", "quiz", "cadence", "dashboard"];
-  const activeIndex = Math.max(0, steps.indexOf(state.step));
   return `
     <header class="topbar">
-      <div class="brand">
-        <div class="brand-mark" aria-hidden="true">S</div>
-        <div>
-          <p class="brand-title">Sirsee</p>
-          <p class="brand-caption">A practical system for small gifts.</p>
-        </div>
-      </div>
-      <div class="progress" aria-label="Progress">
-        ${steps.map((_, index) => `<span class="dot ${index <= activeIndex ? "is-active" : ""}"></span>`).join("")}
-      </div>
+      <button class="brand" type="button" data-go="brief" aria-label="Start over">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span>
+          <span class="brand-title">Sirsee</span>
+          <span class="brand-caption">Small spontaneous gifts in Chicagoland.</span>
+        </span>
+      </button>
+      <span class="city-badge">Chicagoland pilot</span>
     </header>
   `;
 }
 
 function screen() {
-  if (state.step === "quiz") return quizScreen();
-  if (state.step === "cadence") return cadenceScreen();
-  if (state.step === "dashboard") return dashboardScreen();
-  if (state.step === "gift") return giftScreen();
-  return welcomeScreen();
+  if (state.screen === "results") return resultsScreen();
+  if (state.screen === "detail") return detailScreen();
+  return briefScreen();
 }
 
-function welcomeScreen() {
+function briefScreen() {
   return `
-    <section class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow">Chicago pilot</p>
-        <h1>Remember the small gift before it becomes overdue.</h1>
-        <p class="hero-text">
-          Set a rhythm, capture what she likes, and get a short list of local Chicago gifts that feel considered without turning into another errand.
+    <section class="brief-screen">
+      <div class="brief-copy">
+        <p class="eyebrow">Chicagoland gift finder</p>
+        <h1>A small gift, just because.</h1>
+        <p>
+          Sirsee is for spontaneous gift giving: partners, friends, parents, siblings, or anyone who would appreciate a small unexpected thing. Share a few clues and get one strong local pick plus two backups.
         </p>
-        <div class="hero-actions">
-          <button class="primary" data-go="quiz">Build her profile</button>
-          <button class="secondary" data-go="dashboard">View demo dashboard</button>
+        <div class="promise-list" aria-label="What Sirsee returns">
+          <span>Artisanal local shops</span>
+          <span>Delivery first</span>
+          <span>Best pick first</span>
+          <span>No chain-store filler</span>
         </div>
+        <img class="brief-visual" src="./assets/hero.png" alt="" />
       </div>
-      <div class="visual-band">
-        <img src="./assets/hero.png" alt="A wrapped gift, notebook, coffee, and flowers on a table" />
-        <div class="visual-note">
-          <strong>Quarterly by default</strong>
-          Local flowers, bakery goods, books, coffee, and artisan goods in the $25-$50 range.
-        </div>
-      </div>
-    </section>
-  `;
-}
 
-function quizScreen() {
-  return `
-    <section class="layout">
-      <div class="panel">
-        <p class="eyebrow">Step 1</p>
-        <h2>Build a simple gift profile.</h2>
-        <p>Keep the inputs practical. Sirsee uses these clues to make the first set of recommendations specific.</p>
-        <div class="quiz-grid">
-          ${inputField("wifeName", "Her first name", state.profile.wifeName)}
-          ${inputField("neighborhood", "Your Chicago neighborhood", state.profile.neighborhood)}
-          ${inputField("email", "Reminder email", state.profile.email, "email")}
-          ${inputField("treats", "Favorite treats", state.profile.treats)}
-          ${inputField("hobbies", "Interests or rituals", state.profile.hobbies)}
-          ${inputField("dislikes", "Avoid these", state.profile.dislikes)}
+      <form class="brief-panel" data-brief-form>
+        <div class="section-heading">
+          <p class="eyebrow">Quick brief</p>
+          <h2>Who are you surprising?</h2>
         </div>
-      </div>
-      <div class="panel">
-        <h3>Gift lanes</h3>
-        <p>Select the categories that are usually a safe bet.</p>
-        <div class="chip-row" data-chip-group="categories">
-          ${["Flowers", "Sweets", "Coffee/tea", "Books", "Candles", "Local goods"].map((label) => chip(label, state.profile.categories.includes(label))).join("")}
+        <div class="field-grid">
+          ${inputField("recipientName", "Recipient name", state.brief.recipientName)}
+          <div class="field">
+            <span class="field-title">Shopping for</span>
+            <div class="segment-group" role="group" aria-label="Recipient gender">
+              ${genderOptions.map(genderButton).join("")}
+            </div>
+          </div>
+          ${inputField("zipCode", "Chicagoland ZIP code", state.brief.zipCode, "text", "60614", "numeric")}
+          <div class="field">
+            <span class="field-title">Budget</span>
+            <div class="segment-group budget-group" role="group" aria-label="Budget">
+              ${budgetOptions.map(budgetButton).join("")}
+              ${customBudgetField()}
+            </div>
+          </div>
         </div>
-        <h3 style="margin-top: 20px;">Color cues</h3>
-        <div class="chip-row" data-chip-group="colors">
-          ${["Green", "White", "Blue", "Warm neutrals", "Deep colors", "Bright colors"].map((label) => chip(label, state.profile.colors.includes(label))).join("")}
-        </div>
-        <h3 style="margin-top: 20px;">Delivery preference</h3>
-        <select class="select" data-profile="delivery">
-          ${["Pickup or local delivery", "Pickup is fine", "Delivery preferred"].map((option) => `<option ${state.profile.delivery === option ? "selected" : ""}>${option}</option>`).join("")}
-        </select>
-        <div class="footer-actions">
-          <button class="ghost" data-go="welcome">Back</button>
-          <button class="primary" data-go="cadence">Set cadence</button>
-        </div>
-      </div>
-    </section>
-  `;
-}
-
-function cadenceScreen() {
-  return `
-    <section class="layout">
-      <div class="panel">
-        <p class="eyebrow">Step 2</p>
-        <h2>Set the operating rhythm.</h2>
-        <p>Quarterly keeps the habit manageable. Sirsee can still surface seasonal ideas inside the same budget.</p>
         <div class="field">
-          <label for="cadence">Gift cadence</label>
-          <select id="cadence" class="select" data-profile="cadence">
-            ${["Quarterly", "Every 2 months", "Monthly"].map((option) => `<option ${state.profile.cadence === option ? "selected" : ""}>${option}</option>`).join("")}
-          </select>
+          <span class="field-title">Likes</span>
+          <div class="like-grid" aria-label="Likes">
+            ${activeLikeOptions().map(likeTile).join("")}
+            ${customLikeTile()}
+          </div>
         </div>
-        <div class="field" style="margin-top: 18px;">
-          <span class="field-title">Max gift price</span>
-          <div class="slider-row">
-            <input class="range" data-profile="budget" type="range" min="25" max="100" step="5" value="${state.profile.budget}" />
-            <span class="budget-value">$${state.profile.budget}</span>
+        <button class="primary full-width" type="submit">Find gift ideas</button>
+      </form>
+    </section>
+  `;
+}
+
+function resultsScreen() {
+  const [best, ...backups] = recommendations();
+
+  return `
+    <section class="results-screen">
+      <div class="results-header">
+        <div>
+          <p class="eyebrow">Delivery-ready Chicagoland picks for ${escapeHtml(state.brief.recipientName)}</p>
+          <h1>Spontaneous gift ideas</h1>
+          <p>${briefSummary()}</p>
+        </div>
+        <button class="secondary" type="button" data-go="brief">Edit brief</button>
+      </div>
+
+      ${bestCard(best)}
+
+      <section class="backup-section" aria-label="Backup gift ideas">
+        <div class="section-heading">
+          <p class="eyebrow">Backups</p>
+          <h2>Two easy alternatives.</h2>
+        </div>
+        <div class="backup-grid">
+          ${backups.map(backupCard).join("")}
+        </div>
+      </section>
+    </section>
+  `;
+}
+
+function detailScreen() {
+  const gift = decoratedGift(gifts.find((item) => item.id === state.selectedGiftId) || recommendations()[0]);
+
+  return `
+    <section class="detail-screen">
+      <button class="text-button back-link" type="button" data-go="results">Back to results</button>
+      <div class="detail-layout">
+        <img class="detail-image" src="${gift.image}" alt="${escapeHtml(gift.name)}" />
+        <div class="detail-panel">
+          <p class="eyebrow">Chicagoland · ${escapeHtml(gift.category)} · ${escapeHtml(gift.neighborhood)}</p>
+          <h1>${escapeHtml(gift.name)}</h1>
+          <p>${escapeHtml(whyThisWorks(gift))}</p>
+          <dl class="detail-list">
+            <div>
+              <dt>Merchant</dt>
+              <dd>${escapeHtml(gift.merchant)}</dd>
+            </div>
+            <div>
+              <dt>Estimate</dt>
+              <dd>$${gift.price} · ${escapeHtml(budgetFit(gift))}</dd>
+            </div>
+            <div>
+              <dt>Delivery note</dt>
+              <dd>${escapeHtml(gift.delivery)}</dd>
+            </div>
+          </dl>
+          <div class="tag-list">
+            ${gift.tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
+          </div>
+          <div class="action-row">
+            <button class="secondary" type="button" data-go="results">See backups</button>
+            <a class="primary" href="${gift.link}" target="_blank" rel="noreferrer">View merchant</a>
           </div>
         </div>
       </div>
-      <div class="panel">
-        <h3>Reminder brief</h3>
-        <div class="summary-grid">
-          <div class="summary-item"><span>Next reminder</span><strong>${nextSirseeDate()}</strong></div>
-          <div class="summary-item"><span>Default spend</span><strong>$25-$${state.profile.budget}</strong></div>
-          <div class="summary-item"><span>Market</span><strong>Chicago local</strong></div>
-          <div class="summary-item"><span>Channel</span><strong>Email concept</strong></div>
-        </div>
-        <p class="notice">Demo note: reminders are simulated in this MVP. No emails are sent and merchant availability is not live.</p>
-        <div class="footer-actions">
-          <button class="ghost" data-go="quiz">Back</button>
-          <button class="primary" data-go="dashboard">See recommendations</button>
-        </div>
-      </div>
     </section>
   `;
 }
 
-function dashboardScreen() {
-  const recs = visibleGifts();
+function bestCard(gift) {
   return `
-    <section class="layout">
-      <div class="panel dashboard-main">
-        <p class="eyebrow">Your Sirsee plan</p>
-        <h2>${state.profile.wifeName}'s next gift brief is ready.</h2>
-        <div class="stats-grid">
-          <div class="stat"><span>Next reminder</span><strong>${nextSirseeDate()}</strong></div>
-          <div class="stat"><span>Cadence</span><strong>${state.profile.cadence}</strong></div>
-          <div class="stat"><span>Budget</span><strong>Up to $${state.profile.budget}</strong></div>
-          <div class="stat"><span>Market</span><strong>Chicago</strong></div>
+    <article class="best-card">
+      <img src="${gift.image}" alt="${escapeHtml(gift.name)}" />
+      <div class="best-body">
+        <div class="card-kicker">
+          <span class="pill">Best pick</span>
+          <span>${escapeHtml(budgetFit(gift))}</span>
         </div>
-      </div>
-      <div class="panel">
-        <h3>Her profile</h3>
-        <div class="summary-grid">
-          <div class="summary-item"><span>Gift lanes</span><strong>${state.profile.categories.join(", ")}</strong></div>
-          <div class="summary-item"><span>Favorite treats</span><strong>${state.profile.treats}</strong></div>
-          <div class="summary-item"><span>Interests</span><strong>${state.profile.hobbies}</strong></div>
-          <div class="summary-item"><span>Avoid</span><strong>${state.profile.dislikes}</strong></div>
+        <h2>${escapeHtml(gift.name)}</h2>
+        <p class="merchant-line">${escapeHtml(gift.merchant)} · ${escapeHtml(gift.neighborhood)} · $${gift.price}</p>
+        <p>${escapeHtml(whyThisWorks(gift))}</p>
+        <dl class="detail-list compact">
+          <div>
+            <dt>Delivery</dt>
+            <dd>${escapeHtml(gift.delivery)}</dd>
+          </div>
+          <div>
+            <dt>Fit</dt>
+            <dd>${escapeHtml(gift.tags.join(", "))}</dd>
+          </div>
+        </dl>
+        <div class="action-row">
+          <button class="secondary" type="button" data-detail="${gift.id}">Details</button>
+          <a class="primary" href="${gift.link}" target="_blank" rel="noreferrer">View merchant</a>
         </div>
-        <div class="footer-actions">
-          <button class="secondary" data-go="quiz">Edit profile</button>
-          <button class="secondary" data-go="cadence">Edit cadence</button>
-        </div>
-      </div>
-      <div class="panel">
-        <h3>Saved ideas</h3>
-        ${
-          state.saved.length
-            ? state.saved.map((id) => {
-                const gift = gifts.find((item) => item.id === id);
-                return `<div class="saved-item"><strong>${gift.name}</strong><span>${gift.merchant}</span></div>`;
-              }).join("")
-            : `<p>No saved gifts yet. Save one when it looks like the right move.</p>`
-        }
-      </div>
-      <div class="panel dashboard-main">
-        <h3>This quarter's short list</h3>
-        <div class="recommendation-grid">
-          ${recs.map(recommendationCard).join("")}
-        </div>
-      </div>
-    </section>
-  `;
-}
-
-function giftScreen() {
-  const gift = gifts.find((item) => item.id === state.selectedGiftId) || gifts[0];
-  const isSaved = state.saved.includes(gift.id);
-  return `
-    <section class="gift-detail">
-      <div>
-        <img src="${gift.image}" alt="${gift.name}" />
-      </div>
-      <div class="panel">
-        <p class="eyebrow">${gift.category} · ${gift.neighborhood}</p>
-        <h2>${gift.name}</h2>
-        <p>${gift.reason}</p>
-        <div class="merchant-box">
-          <span class="merchant-meta">Merchant</span>
-          <h3>${gift.merchant}</h3>
-          <p>${gift.pickup}</p>
-          <strong class="price">$${gift.price} estimated</strong>
-        </div>
-        <div class="tag-list" style="margin-top: 14px;">
-          ${gift.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}
-        </div>
-        <p class="notice">Sirsee links out to the merchant. This MVP does not confirm live price, inventory, delivery, or pickup windows.</p>
-        <div class="footer-actions">
-          <button class="ghost" data-go="dashboard">Back</button>
-          <button class="secondary" data-save="${gift.id}">${isSaved ? "Saved" : "Save idea"}</button>
-          <a class="primary" href="${gift.link}" target="_blank" rel="noreferrer" style="display:inline-grid;place-items:center;text-decoration:none;">View merchant</a>
-        </div>
-      </div>
-    </section>
-  `;
-}
-
-function inputField(key, label, value, type = "text") {
-  return `
-    <div class="field">
-      <label for="${key}">${label}</label>
-      <input id="${key}" class="input" data-profile="${key}" type="${type}" value="${escapeHtml(value)}" />
-    </div>
-  `;
-}
-
-function chip(label, selected) {
-  return `<button class="chip ${selected ? "is-selected" : ""}" data-chip="${label}" type="button">${label}</button>`;
-}
-
-function recommendationCard(gift) {
-  return `
-    <article class="recommendation-card">
-      <img src="${gift.image}" alt="${gift.name}" />
-      <div class="recommendation-body">
-        <div class="recommendation-head">
-          <h3>${gift.name}</h3>
-          <span class="price">$${gift.price}</span>
-        </div>
-        <span class="card-meta">${gift.merchant} · ${gift.neighborhood}</span>
-        <p>${gift.reason}</p>
-        <div class="tag-list">
-          ${gift.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}
-        </div>
-        <button class="primary" data-gift="${gift.id}">View gift</button>
       </div>
     </article>
   `;
 }
 
-function toast() {
-  return `<div class="toast ${state.toastMessage ? "" : "hidden"}" role="status">${state.toastMessage}</div>`;
+function backupCard(gift) {
+  return `
+    <article class="backup-card">
+      <img src="${gift.image}" alt="${escapeHtml(gift.name)}" />
+      <div class="backup-body">
+        <div>
+          <span class="card-meta">${escapeHtml(gift.merchant)} · $${gift.price}</span>
+          <h3>${escapeHtml(gift.name)}</h3>
+          <p class="delivery-line">${escapeHtml(gift.delivery)}</p>
+          <p>${escapeHtml(whyThisWorks(gift))}</p>
+        </div>
+        <div class="action-row compact-actions">
+          <button class="text-button" type="button" data-detail="${gift.id}">Details</button>
+          <a class="primary" href="${gift.link}" target="_blank" rel="noreferrer">View merchant</a>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function inputField(key, label, value, type = "text", placeholder = "", inputMode = "") {
+  return `
+    <div class="field">
+      <label for="${key}">${label}</label>
+      <input id="${key}" class="input" data-brief="${key}" type="${type}" value="${escapeAttribute(value)}" placeholder="${escapeAttribute(placeholder)}" inputmode="${escapeAttribute(inputMode)}" />
+    </div>
+  `;
+}
+
+function likeTile(option) {
+  const selected = state.brief.likes.includes(option.id);
+  return `
+    <button class="like-tile ${selected ? "is-selected" : ""}" type="button" data-like="${option.id}" aria-pressed="${selected}">
+      <img src="${option.image}" alt="" />
+      <span>${escapeHtml(option.label)}</span>
+    </button>
+  `;
+}
+
+function customLikeTile() {
+  return `
+    <label class="like-tile custom-like ${state.brief.customLike.trim() ? "is-selected" : ""}">
+      <span>Something else</span>
+      <input class="custom-like-input" data-brief="customLike" type="text" value="${escapeAttribute(state.brief.customLike)}" placeholder="${escapeAttribute(customLikePlaceholder())}" />
+    </label>
+  `;
+}
+
+function budgetButton(amount) {
+  const selected = Number(state.brief.budget) === amount;
+  return `
+    <button class="segment ${selected ? "is-selected" : ""}" type="button" data-budget="${amount}" aria-pressed="${selected}">
+      $${amount}
+    </button>
+  `;
+}
+
+function customBudgetField() {
+  const customValue = budgetOptions.includes(Number(state.brief.budget)) ? "" : Number(state.brief.budget);
+  const selected = Boolean(customValue);
+  return `
+    <label class="custom-budget ${selected ? "is-selected" : ""}">
+      <span class="sr-only">Custom budget</span>
+      <span class="budget-prefix">$</span>
+      <input class="custom-budget-input" data-budget-custom type="number" min="1" step="1" value="${escapeAttribute(customValue)}" placeholder="Other" aria-label="Custom budget" />
+    </label>
+  `;
+}
+
+function genderButton(option) {
+  const selected = state.brief.recipientGender === option.id;
+  return `
+    <button class="segment ${selected ? "is-selected" : ""}" type="button" data-gender="${option.id}" aria-pressed="${selected}">
+      ${option.label}
+    </button>
+  `;
+}
+
+function activeLikeOptions() {
+  return likeOptionsByGender[state.brief.recipientGender] || likeOptionsByGender.female;
+}
+
+function customLikePlaceholder() {
+  return state.brief.recipientGender === "male"
+    ? "e.g. vinyl, grilling, desk gear"
+    : "e.g. skincare, ceramics, jewelry";
+}
+
+function recommendations() {
+  return gifts
+    .map(decoratedGift)
+    .sort((a, b) => b.score - a.score || a.price - b.price)
+    .slice(0, 3);
+}
+
+function decoratedGift(gift) {
+  return {
+    ...gift,
+    overBudget: Math.max(0, gift.price - Number(state.brief.budget)),
+    score: scoreGift(gift)
+  };
+}
+
+function scoreGift(gift) {
+  const budget = Number(state.brief.budget);
+  const overBudget = Math.max(0, gift.price - budget);
+  const selectedLikes = activeLikeOptions().filter((option) => state.brief.likes.includes(option.id));
+  const customLikeText = state.brief.customLike.toLowerCase();
+  const isChicagolandZip = chicagolandZipPattern.test(state.brief.zipCode.trim());
+  let score = gift.price <= budget ? 100 : Math.max(0, 85 - overBudget * 10);
+
+  if (isChicagolandZip) score += 8;
+  if (selectedLikes.some((option) => option.categories.includes(gift.category))) score += 30;
+  if (gift.category === "Flowers" && /flower|bouquet|plant/.test(customLikeText)) score += 24;
+  if (gift.category === "Sweets" && /chocolate|pastr|croissant|bakery|sweet|dessert/.test(customLikeText)) score += 24;
+  if (gift.category === "Coffee/tea" && /coffee|tea|matcha|chai/.test(customLikeText)) score += 24;
+  if (gift.category === "Local goods" && /candle|home|ceramic|skincare|record|vinyl|jewelry|art|desk|bar|grill/.test(customLikeText)) score += 24;
+  if (state.brief.likes.includes("coffee") && gift.tags.some((tag) => /morning|quiet|foodie/.test(tag))) score += 8;
+  if (gift.tags.some((tag) => /delivery|ships|artisan|handmade|small luxury/.test(tag))) score += 10;
+
+  return score;
+}
+
+function whyThisWorks(gift) {
+  const budgetText = gift.price <= Number(state.brief.budget)
+    ? `It stays inside the $${state.brief.budget} brief`
+    : `It is $${gift.overBudget} over the $${state.brief.budget} brief, so it stays in the near-budget set`;
+  return `${budgetText}, matches ${likesSummary().toLowerCase()}, includes a delivery option, and works as a spontaneous small surprise because ${gift.reason}`;
+}
+
+function budgetFit(gift) {
+  return gift.price <= Number(state.brief.budget)
+    ? `Within $${state.brief.budget}`
+    : `$${gift.overBudget} over budget`;
+}
+
+function briefSummary() {
+  return `${escapeHtml(genderSummary())} · ZIP ${escapeHtml(state.brief.zipCode)} · Up to $${state.brief.budget} · Likes: ${escapeHtml(likesSummary())}`;
+}
+
+function likesSummary() {
+  return state.brief.likes
+    .map((id) => activeLikeOptions().find((option) => option.id === id)?.label)
+    .filter(Boolean)
+    .concat(state.brief.customLike.trim() ? [state.brief.customLike.trim()] : [])
+    .join(", ") || "small local surprises";
+}
+
+function genderSummary() {
+  return genderOptions.find((option) => option.id === state.brief.recipientGender)?.summary || "Shopping for them";
 }
 
 function bindEvents() {
-  document.querySelectorAll("[data-go]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.step = button.dataset.go;
+  document.querySelectorAll("[data-go]").forEach((control) => {
+    control.addEventListener("click", () => {
+      state.screen = control.dataset.go;
       render();
     });
   });
 
-  document.querySelectorAll("[data-profile]").forEach((field) => {
-    field.addEventListener("input", () => updateProfile(field));
-    field.addEventListener("change", () => updateProfile(field));
+  document.querySelectorAll("[data-brief]").forEach((field) => {
+    field.addEventListener("input", () => {
+      state.brief[field.dataset.brief] = field.value;
+      if (field.dataset.brief === "customLike") {
+        field.closest(".custom-like")?.classList.toggle("is-selected", Boolean(field.value.trim()));
+      }
+    });
   });
 
-  document.querySelectorAll("[data-chip]").forEach((button) => {
+  document.querySelectorAll("[data-budget]").forEach((button) => {
     button.addEventListener("click", () => {
-      const group = button.closest("[data-chip-group]").dataset.chipGroup;
-      const value = button.dataset.chip;
-      const list = state.profile[group];
-      state.profile[group] = list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
+      state.brief.budget = Number(button.dataset.budget);
       render();
     });
   });
 
-  document.querySelectorAll("[data-gift]").forEach((button) => {
+  document.querySelectorAll("[data-budget-custom]").forEach((field) => {
+    field.addEventListener("input", () => {
+      const amount = Number(field.value);
+      if (amount > 0) {
+        state.brief.budget = Math.round(amount);
+        document.querySelectorAll("[data-budget]").forEach((button) => {
+          button.classList.toggle("is-selected", false);
+          button.setAttribute("aria-pressed", "false");
+        });
+        field.closest(".custom-budget")?.classList.add("is-selected");
+      } else {
+        state.brief.budget = 50;
+        field.closest(".custom-budget")?.classList.remove("is-selected");
+        const defaultBudget = document.querySelector('[data-budget="50"]');
+        defaultBudget?.classList.add("is-selected");
+        defaultBudget?.setAttribute("aria-pressed", "true");
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-gender]").forEach((button) => {
     button.addEventListener("click", () => {
-      state.selectedGiftId = button.dataset.gift;
-      state.step = "gift";
+      const gender = button.dataset.gender;
+      const option = genderOptions.find((item) => item.id === gender);
+      state.brief.recipientGender = gender;
+      state.brief.likes = option ? [...option.defaults] : [];
       render();
     });
   });
 
-  document.querySelectorAll("[data-save]").forEach((button) => {
+  document.querySelectorAll("[data-like]").forEach((button) => {
     button.addEventListener("click", () => {
-      const id = button.dataset.save;
-      if (!state.saved.includes(id)) state.saved.push(id);
-      state.toastMessage = "Saved to this quarter's Sirsee ideas.";
+      const id = button.dataset.like;
+      const likes = state.brief.likes;
+      state.brief.likes = likes.includes(id) ? likes.filter((item) => item !== id) : [...likes, id];
       render();
-      window.setTimeout(() => {
-        state.toastMessage = "";
-        render();
-      }, 1800);
     });
   });
-}
 
-function updateProfile(field) {
-  const key = field.dataset.profile;
-  state.profile[key] = field.type === "range" ? Number(field.value) : field.value;
-  if (field.type === "range") {
-    const value = document.querySelector(".budget-value");
-    if (value) value.textContent = `$${field.value}`;
+  document.querySelectorAll("[data-detail]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.selectedGiftId = button.dataset.detail;
+      state.screen = "detail";
+      render();
+    });
+  });
+
+  const form = document.querySelector("[data-brief-form]");
+  if (form) {
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      state.screen = "results";
+      render();
+    });
   }
 }
 
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
-    .replaceAll('"', "&quot;")
     .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function escapeAttribute(value) {
+  return escapeHtml(value).replaceAll("'", "&#39;");
 }
 
 render();
