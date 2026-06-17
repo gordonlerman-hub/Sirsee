@@ -112,6 +112,33 @@ a {
   font-weight: 800;
 }
 
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.topbar-link {
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--accent-deep);
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.topbar-link.is-active {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(47, 100, 93, 0.18);
+}
+
+.topbar-link:hover {
+  background: rgba(255, 255, 255, 0.72);
+}
+
 h1,
 h2,
 h3,
@@ -198,16 +225,6 @@ p {
   color: var(--accent-deep);
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(47, 100, 93, 0.18);
-}
-
-.brief-visual {
-  display: none;
-  width: 100%;
-  margin-top: 18px;
-  border: 1px solid rgba(47, 100, 93, 0.14);
-  border-radius: 8px;
-  object-fit: cover;
-  box-shadow: 0 14px 34px rgba(31, 28, 23, 0.12);
 }
 
 .brief-panel,
@@ -508,6 +525,19 @@ p {
   align-items: end;
 }
 
+.results-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.results-actions .secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .results-header h1 {
   max-width: 760px;
   margin-bottom: 10px;
@@ -641,6 +671,17 @@ p {
   gap: 12px;
 }
 
+.like-match {
+  color: var(--accent-deep);
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.backup-body .like-match {
+  margin: 0 0 4px;
+}
+
 .backup-grid {
   display: grid;
   gap: 12px;
@@ -685,6 +726,7 @@ p {
 .reminder-panel,
 .saved-reminders,
 .reminders-screen,
+.reminder-settings-screen,
 .empty-reminders {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -694,6 +736,7 @@ p {
 
 .reminder-panel,
 .reminders-screen,
+.reminder-settings-screen,
 .empty-reminders {
   display: grid;
   gap: 16px;
@@ -721,6 +764,71 @@ p {
 
 .reminder-note {
   font-size: 0.82rem;
+}
+
+.reminder-note--error {
+  color: #9b3d3d;
+}
+
+.reminder-account-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.account-reminders-section {
+  display: grid;
+  gap: 12px;
+}
+
+.account-section-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.auth-panel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.auth-panel--disabled code {
+  font-size: 0.82em;
+}
+
+.auth-form {
+  display: grid;
+  gap: 12px;
+}
+
+.auth-divider {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  height: 1px;
+  background: var(--line);
+}
+
+.auth-toggle-button {
+  justify-self: center;
+}
+
+.auth-google-button {
+  font-weight: 800;
 }
 
 .reminder-frequency-group {
@@ -769,8 +877,130 @@ p {
   font-size: 1rem;
 }
 
-.reminders-screen {
+.reminder-settings-button {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+}
+
+.reminders-screen,
+.reminder-settings-screen {
   gap: 18px;
+}
+
+.reminder-settings-summary {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.reminder-settings-footer {
+  display: grid;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.reminder-cancel-button {
+  color: #8f3a3a;
+  border-color: rgba(143, 58, 58, 0.28);
+  background: rgba(255, 245, 245, 0.95);
+}
+
+.reminder-cancel-button:hover {
+  background: rgba(255, 235, 235, 0.98);
+}
+
+.loading-screen {
+  display: grid;
+  place-items: center;
+  min-height: 52vh;
+}
+
+.loading-card {
+  display: grid;
+  gap: 14px;
+  width: min(560px, 100%);
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 253, 249, 0.92);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.loading-card h1 {
+  margin-bottom: 0;
+}
+
+.loading-card p {
+  margin-bottom: 0;
+}
+
+.loading-likes {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  margin-top: 4px;
+}
+
+.loading-likes-label {
+  margin: 0;
+  color: var(--accent-deep);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.loading-likes-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.loading-likes-list li {
+  padding: 8px 10px;
+  border: 1px solid rgba(47, 100, 93, 0.18);
+  border-radius: 999px;
+  color: var(--accent-deep);
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.loading-spinner {
+  width: 42px;
+  height: 42px;
+  margin: 8px auto 0;
+  border: 3px solid rgba(47, 100, 93, 0.18);
+  border-top-color: var(--accent-deep);
+  border-radius: 999px;
+  animation: sirsee-spin 900ms linear infinite;
+}
+
+@keyframes sirsee-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-banner {
+  padding: 12px 14px;
+  border: 1px solid rgba(180, 93, 67, 0.35);
+  border-radius: 8px;
+  color: #7a3b28;
+  background: rgba(180, 93, 67, 0.1);
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
 @media (min-width: 760px) {
@@ -794,12 +1024,6 @@ p {
     font-size: clamp(2.2rem, 5.4vw, 4.1rem);
   }
 
-  .brief-visual {
-    display: block;
-    aspect-ratio: 16 / 9;
-    max-height: 190px;
-  }
-
   .field-grid,
   .backup-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -807,6 +1031,10 @@ p {
 
   .results-header {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .results-actions {
+    justify-content: flex-end;
   }
 
   .best-card,
@@ -846,6 +1074,11 @@ p {
 
   .brief-panel {
     padding: 16px;
+  }
+
+  .results-actions {
+    width: 100%;
+    display: grid;
   }
 
   .results-header .secondary,

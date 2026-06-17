@@ -1,0 +1,28 @@
+---
+description: Restart Sirsee dev server automatically after backend or env changes
+alwaysApply: true
+---
+
+# Auto-restart Sirsee server
+
+When changes require a running server to pick them up, restart automatically — do not ask the user first.
+
+Restart when you change:
+- `server.py`, `.env`, or Supabase/env config the server reads at startup
+- Any change where verification needs the live API (e.g. `/api/config`, `/api/reminders`)
+
+Do **not** restart for static-only edits (`app.js`, `styles.css`, `index.html`) unless you are verifying server-backed behavior.
+
+## How to restart
+
+From the project root:
+
+```bash
+for p in 4174 4175; do lsof -ti :$p 2>/dev/null | xargs kill 2>/dev/null; done
+sleep 0.5
+python3 server.py
+```
+
+Default port is **4174**. Use `PORT=4175` only if 4174 cannot be freed.
+
+After restart, confirm with `curl -s http://127.0.0.1:4174/api/config` when env or API behavior changed.
