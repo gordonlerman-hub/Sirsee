@@ -1,0 +1,510 @@
+[
+  {
+    "id": "southside-blooms",
+    "merchant": "Southside Blooms",
+    "name": "Farm-grown seasonal bouquet",
+    "neighborhood": "Englewood",
+    "lat": 41.7792,
+    "lng": -87.6441,
+    "price": 50,
+    "category": "Flowers",
+    "image": "./assets/merchants/southside-blooms.jpg",
+    "link": "https://southsideblooms.com/",
+    "delivery": "Chicago delivery available through the merchant",
+    "servesZones": ["chicago"],
+    "tags": [
+      "delivery",
+      "urban farm",
+      "mission-driven"
+    ],
+    "likes": [
+      "flowers",
+      "plants"
+    ],
+    "reason": "it feels personal without being formal, and it comes from a distinctive Chicago grower instead of a generic flower chain."
+  },
+  {
+    "id": "katherine-anne-truffles",
+    "merchant": "Katherine Anne Confections",
+    "name": "Handmade truffle medley",
+    "neighborhood": "Irving Park",
+    "lat": 41.9534,
+    "lng": -87.7398,
+    "price": 39,
+    "category": "Sweets",
+    "image": "./assets/bakery.png",
+    "link": "https://www.katherine-anne.com/",
+    "delivery": "Online ordering with shipping or local delivery options",
+    "servesZones": ["nationwide", "chicago"],
+    "tags": [
+      "delivery",
+      "handmade",
+      "Chicago confectioner"
+    ],
+    "likes": [
+      "sweets",
+      "foodie"
+    ],
+    "reason": "the flavors feel crafted and specific, while the order still stays easy enough for a spontaneous gesture."
+  },
+  {
+    "id": "neighborly-vase",
+    "merchant": "Neighborly",
+    "name": "Small ceramic bud vase",
+    "neighborhood": "Lincoln Square",
+    "lat": 41.9683,
+    "lng": -87.6895,
+    "price": 28,
+    "category": "Local goods",
+    "image": "./assets/merchants/neighborly-vase.jpg",
+    "link": "https://neighborlyshop.com/",
+    "delivery": "Ships from a Chicago shop",
+    "servesZones": ["nationwide"],
+    "tags": [
+      "delivery",
+      "artisan",
+      "useful"
+    ],
+    "likes": [
+      "home",
+      "cozy",
+      "desk"
+    ],
+    "reason": "it is small, tactile, and quietly stylish, the kind of object that makes a shelf or desk feel more considered."
+  },
+  {
+    "id": "neighborly-candles",
+    "merchant": "Neighborly",
+    "name": "Mini candle gift set trio",
+    "neighborhood": "Lincoln Square",
+    "lat": 41.9683,
+    "lng": -87.6895,
+    "price": 48,
+    "category": "Local goods",
+    "image": "./assets/merchants/neighborly-candles.jpg",
+    "link": "https://neighborlyshop.com/products/p-f-candle-greatest-hits-mini-candle-gift-set-trio",
+    "delivery": "Ships from Neighborly",
+    "servesZones": ["nationwide"],
+    "tags": [
+      "delivery",
+      "home",
+      "artisan"
+    ],
+    "likes": [
+      "home",
+      "cozy"
+    ],
+    "reason": "it lands as warm and thoughtful without feeling oversized, and the shop has a curated local-goods feel."
+  },
+  {
+    "id": "rare-tea-cellar",
+    "merchant": "Rare Tea Cellar",
+    "name": "Tea sampler and honey",
+    "neighborhood": "Ravenswood",
+    "lat": 41.9689,
+    "lng": -87.6741,
+    "price": 45,
+    "category": "Coffee/tea",
+    "image": "./assets/merchants/rare-tea-cellar.jpg",
+    "link": "https://rareteacellar.com/products/master-tea-sampler",
+    "delivery": "Ships from Rare Tea Cellar",
+    "servesZones": ["nationwide"],
+    "tags": [
+      "delivery",
+      "foodie",
+      "small luxury"
+    ],
+    "likes": [
+      "coffee",
+      "cozy",
+      "foodie"
+    ],
+    "reason": "it creates a relaxed evening ritual and feels more special than grabbing a bag from a national chain."
+  },
+  {
+    "id": "bennisons-bakery",
+    "merchant": "Bennison's Bakery",
+    "name": "Pastry gift box",
+    "neighborhood": "Evanston",
+    "lat": 42.0491,
+    "lng": -87.6814,
+    "price": 32,
+    "category": "Sweets",
+    "image": "./assets/bakery.png",
+    "link": "https://bennisonscakes.com/",
+    "delivery": "Online ordering with local pickup and delivery options",
+    "servesZones": ["north_shore", "nationwide"],
+    "tags": [
+      "bakery",
+      "handmade",
+      "North Shore"
+    ],
+    "likes": [
+      "sweets",
+      "foodie"
+    ],
+    "reason": "it is a North Shore institution with beautiful pastries that feel special without being fussy."
+  },
+  {
+    "id": "wilmette-flowers",
+    "merchant": "Wilmette Flowers",
+    "name": "Seasonal fresh arrangement",
+    "neighborhood": "Wilmette",
+    "lat": 42.0724,
+    "lng": -87.7228,
+    "price": 48,
+    "category": "Flowers",
+    "image": "./assets/flowers.png",
+    "link": "https://www.wilmetteflorist.com/",
+    "delivery": "Local delivery across the North Shore",
+    "servesZones": ["north_shore"],
+    "tags": [
+      "delivery",
+      "florist",
+      "North Shore"
+    ],
+    "likes": [
+      "flowers",
+      "plants"
+    ],
+    "reason": "it is close to home on the North Shore and delivers fresh arrangements without a chain-store feel."
+  },
+  {
+    "id": "bliss-flowers-glenview",
+    "merchant": "Bliss Flowers & Boutique",
+    "name": "Boutique floral arrangement",
+    "neighborhood": "Glenview",
+    "lat": 42.0698,
+    "lng": -87.8035,
+    "price": 52,
+    "category": "Flowers",
+    "image": "./assets/merchants/bliss-flowers-glenview.jpg",
+    "link": "https://www.blissflowersandboutique.com/",
+    "delivery": "Local delivery in Glenview and nearby suburbs",
+    "servesZones": ["north_shore"],
+    "tags": [
+      "delivery",
+      "florist",
+      "Glenview"
+    ],
+    "likes": [
+      "flowers",
+      "plants"
+    ],
+    "reason": "it is right in Glenview with same-day style options that feel personal and locally rooted."
+  },
+  {
+    "id": "guild-glenview",
+    "merchant": "The Guild",
+    "name": "Curated home gift",
+    "neighborhood": "Highland Park",
+    "lat": 42.0695,
+    "lng": -87.8012,
+    "price": 35,
+    "category": "Local goods",
+    "image": "./assets/candle.png",
+    "link": "https://theguild.global/",
+    "delivery": "Ships from online shop with Chicago-area pickup options",
+    "servesZones": ["nationwide"],
+    "tags": [
+      "home",
+      "Glenview",
+      "curated"
+    ],
+    "likes": [
+      "home",
+      "cozy",
+      "desk"
+    ],
+    "reason": "it is a downtown Glenview shop with small home goods that feel curated instead of mass-market."
+  },
+  {
+    "id": "tags-bakery",
+    "merchant": "Tag's Bakery",
+    "name": "Cookie and brownie assortment",
+    "neighborhood": "Wilmette",
+    "lat": 42.0805,
+    "lng": -87.7156,
+    "price": 24,
+    "category": "Sweets",
+    "image": "./assets/merchants/tags-bakery.jpg",
+    "link": "https://tagsbakery.com/",
+    "delivery": "Seasonal shipping on select items; local pickup available",
+    "servesZones": ["north_shore", "nationwide"],
+    "tags": [
+      "bakery",
+      "North Shore",
+      "handmade"
+    ],
+    "likes": [
+      "sweets",
+      "snacks",
+      "foodie"
+    ],
+    "reason": "it is a neighborhood bakery standby with giftable treats that feel homemade and familiar."
+  },
+  {
+    "id": "metropolis-coffee",
+    "merchant": "Metropolis Coffee Company",
+    "name": "Single-origin coffee gift bag",
+    "neighborhood": "Avondale",
+    "lat": 41.9392,
+    "lng": -87.7098,
+    "price": 22,
+    "category": "Coffee/tea",
+    "image": "./assets/merchants/metropolis-coffee.webp",
+    "link": "https://www.metropoliscoffee.com/",
+    "delivery": "Ships nationwide from Chicago",
+    "servesZones": ["nationwide"],
+    "tags": [
+      "delivery",
+      "coffee",
+      "Chicago roaster"
+    ],
+    "likes": [
+      "coffee",
+      "cozy"
+    ],
+    "reason": "it is a Chicago roaster with beans that feel like a small daily ritual instead of a generic gift card."
+  },
+  {
+    "id": "millefiori",
+    "merchant": "MilleFiori",
+    "name": "European-style floral arrangement",
+    "neighborhood": "Winnetka",
+    "lat": 42.1081,
+    "lng": -87.7365,
+    "price": 58,
+    "category": "Flowers",
+    "image": "./assets/flowers.png",
+    "link": "https://www.millefioriflowers.com/",
+    "delivery": "North Shore delivery available for online flower orders",
+    "servesZones": ["north_shore"],
+    "tags": [
+      "delivery",
+      "florist",
+      "North Shore"
+    ],
+    "likes": [
+      "flowers",
+      "plants"
+    ],
+    "reason": "the style is elegant without being stiff, and delivery coverage makes it practical for a surprise."
+  },
+  {
+    "id": "bookends-beginnings",
+    "merchant": "Bookends & Beginnings",
+    "name": "Independent bookstore gift card or book pick",
+    "neighborhood": "Evanston",
+    "lat": 42.0482,
+    "lng": -87.6805,
+    "price": 30,
+    "category": "Local goods",
+    "image": "./assets/bookshop.png",
+    "link": "https://www.bookendsandbeginnings.com/",
+    "delivery": "In-store pickup and online ordering",
+    "servesZones": ["nationwide"],
+    "tags": [
+      "bookshop",
+      "North Shore",
+      "curated"
+    ],
+    "likes": [
+      "cozy",
+      "desk",
+      "home"
+    ],
+    "reason": "a neighborhood bookshop gift feels personal and supports a local Evanston staple."
+  },
+  {
+    "id": "intelligentsia-logan",
+    "merchant": "Intelligentsia Coffee",
+    "name": "Fresh-roasted coffee bag",
+    "neighborhood": "Logan Square",
+    "lat": 41.9284,
+    "lng": -87.7075,
+    "price": 24,
+    "category": "Coffee/tea",
+    "image": "./assets/merchants/intelligentsia-logan.png",
+    "link": "https://www.intelligentsia.com/",
+    "delivery": "Ships from Chicago roaster",
+    "servesZones": ["nationwide"],
+    "tags": [
+      "delivery",
+      "coffee",
+      "Chicago roaster"
+    ],
+    "likes": [
+      "coffee",
+      "cozy"
+    ],
+    "reason": "it is a Chicago coffee classic that feels elevated but still easy to send or pick up."
+  },
+  {
+    "id": "vosges-chocolate",
+    "merchant": "Vosges Haut-Chocolat",
+    "name": "Artisan chocolate collection",
+    "neighborhood": "Lincoln Park",
+    "lat": 41.9189,
+    "lng": -87.6488,
+    "price": 42,
+    "category": "Sweets",
+    "image": "./assets/merchants/vosges-chocolate.png",
+    "link": "https://www.vosgeschocolate.com/",
+    "delivery": "Ships from Chicago chocolatier",
+    "servesZones": ["nationwide"],
+    "tags": [
+      "delivery",
+      "handmade",
+      "Chicago confectioner"
+    ],
+    "likes": [
+      "sweets",
+      "foodie"
+    ],
+    "reason": "the flavors are distinctive and polished, making a small box feel like a real treat."
+  },
+  {
+    "id": "passion-house-coffee",
+    "merchant": "Passion House Coffee Roasters",
+    "name": "Specialty coffee gift set",
+    "neighborhood": "River North",
+    "lat": 41.8912,
+    "lng": -87.6345,
+    "price": 32,
+    "category": "Coffee/tea",
+    "image": "./assets/merchants/passion-house-coffee.jpg",
+    "link": "https://www.passionhousecoffee.com/",
+    "delivery": "Ships from Chicago",
+    "servesZones": ["nationwide"],
+    "tags": [
+      "delivery",
+      "coffee",
+      "Chicago roaster"
+    ],
+    "likes": [
+      "coffee",
+      "cozy"
+    ],
+    "reason": "it is a local roaster pick that feels more intentional than a generic coffee gift card."
+  },
+  {
+    "id": "flowers-for-dreamers",
+    "merchant": "Flowers for Dreams",
+    "name": "Seasonal bouquet with social impact",
+    "neighborhood": "West Town",
+    "lat": 41.9022,
+    "lng": -87.6765,
+    "price": 49,
+    "category": "Flowers",
+    "image": "./assets/flowers.png",
+    "link": "https://flowersfordreams.com/",
+    "delivery": "Same-day Chicago delivery and Midwest shipping",
+    "servesZones": ["chicago", "chicago_metro"],
+    "tags": [
+      "delivery",
+      "florist",
+      "mission-driven"
+    ],
+    "likes": [
+      "flowers",
+      "plants"
+    ],
+    "reason": "the bouquets are fresh and modern, with Chicago delivery that keeps the gesture easy."
+  },
+  {
+    "id": "chalet-nursery",
+    "merchant": "Chalet Nursery",
+    "name": "Potted plant or garden gift",
+    "neighborhood": "Wilmette",
+    "lat": 42.0712,
+    "lng": -87.7512,
+    "price": 32,
+    "category": "Flowers",
+    "image": "./assets/flowers.png",
+    "link": "https://www.chaletnursery.com/",
+    "delivery": "Shop online with North Shore pickup or delivery on select items",
+    "servesZones": ["north_shore"],
+    "tags": [
+      "plants",
+      "North Shore",
+      "garden"
+    ],
+    "likes": [
+      "flowers",
+      "plants",
+      "home"
+    ],
+    "reason": "a living plant from a North Shore nursery feels lasting and thoughtful without being overly formal."
+  },
+  {
+    "id": "off-premise",
+    "merchant": "Off Premise",
+    "name": "Curated bottle or gift card",
+    "neighborhood": "Lincoln Park",
+    "lat": 41.9182,
+    "lng": -87.6558,
+    "price": 45,
+    "category": "Bar & spirits",
+    "image": "./assets/tea.png",
+    "link": "https://offpremisechicago.com/",
+    "delivery": "Same-day local delivery and online ordering",
+    "servesZones": ["chicago", "chicago_metro"],
+    "tags": [
+      "delivery",
+      "wine",
+      "spirits",
+      "Chicago bottle shop"
+    ],
+    "likes": [
+      "bar"
+    ],
+    "reason": "it is a Lincoln Park bottle shop with natural wine, whiskey, and agave picks that feel curated instead of big-box."
+  },
+  {
+    "id": "verve-wine",
+    "merchant": "Verve Wine",
+    "name": "Sommelier-picked wine gift",
+    "neighborhood": "Lincoln Park",
+    "lat": 41.9255,
+    "lng": -87.6498,
+    "price": 48,
+    "category": "Bar & spirits",
+    "image": "./assets/tea.png",
+    "link": "https://chi.vervewine.com/",
+    "delivery": "Local delivery and online ordering",
+    "servesZones": ["chicago", "chicago_metro"],
+    "tags": [
+      "delivery",
+      "wine",
+      "Chicago wine shop"
+    ],
+    "likes": [
+      "bar"
+    ],
+    "reason": "the selection is thoughtful and giftable, with same-day delivery that makes a bottle feel spontaneous."
+  },
+  {
+    "id": "vin-chicago",
+    "merchant": "Vin Chicago",
+    "name": "Fine wine gift bottle",
+    "neighborhood": "Lincoln Park",
+    "lat": 41.9841,
+    "lng": -87.6682,
+    "price": 42,
+    "category": "Bar & spirits",
+    "image": "./assets/tea.png",
+    "link": "https://vinchicago.com/",
+    "delivery": "Local courier delivery and Illinois shipping",
+    "servesZones": ["chicago", "chicago_metro", "nationwide"],
+    "tags": [
+      "delivery",
+      "wine",
+      "Chicago wine shop"
+    ],
+    "likes": [
+      "bar"
+    ],
+    "reason": "it is a longtime Chicago wine shop with online ordering, so a bottle gift still feels local and considered."
+  }
+]
