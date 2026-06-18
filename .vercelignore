@@ -1,3 +1,6 @@
 .env
 .cursor/
 data/reminders.json
+.tools/
+.venv/
+.venv-deploy/
