@@ -6,6 +6,21 @@ function authRedirectUrl() {
   return `${window.location.origin}${window.location.pathname}`;
 }
 
+export function isEmbeddedAuthBrowser() {
+  const ua = navigator.userAgent || "";
+  if (/Electron|Cursor/i.test(ua)) return true;
+  const brands = navigator.userAgentData?.brands?.map((brand) => brand.brand) || [];
+  const hasChromium = brands.some((brand) => /Chromium/i.test(brand));
+  const hasGoogleChrome = brands.some((brand) => /Google Chrome/i.test(brand));
+  // Cursor's built-in browser is Chromium without the Google Chrome brand tag.
+  if (hasChromium && !hasGoogleChrome) return true;
+  return false;
+}
+
+export function externalAuthAppUrl() {
+  return authRedirectUrl();
+}
+
 export async function initAuth() {
   const response = await fetch("/api/config");
   const config = await response.json();
@@ -74,20 +89,33 @@ export function onAuthStateChange(callback) {
   return () => data.subscription.unsubscribe();
 }
 
-export async function signInWithGoogle() {
+export async function getGoogleOAuthUrl() {
   if (!supabase) throw new Error("Sign-in is not configured yet.");
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
       redirectTo: authRedirectUrl(),
-      skipBrowserRedirect: true
+      skipBrowserRedirect: true,
+      queryParams: {
+        prompt: "select_account"
+      }
     }
   });
   if (error) throw normalizeAuthError(error);
   if (!data?.url) {
     throw new Error("Google sign-in is not enabled yet. Add Google OAuth credentials in Supabase.");
   }
-  window.location.assign(data.url);
+  return data.url;
+}
+
+export async function signInWithGoogle() {
+  if (isEmbeddedAuthBrowser()) {
+    throw new Error(
+      "Google passkeys do not work in the Cursor browser. Open this app in Chrome or Safari, then try again."
+    );
+  }
+  const url = await getGoogleOAuthUrl();
+  window.location.assign(url);
 }
 
 export async function signUpWithPassword(email, password) {

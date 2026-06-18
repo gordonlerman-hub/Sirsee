@@ -1,8 +1,10 @@
 import {
+  externalAuthAppUrl,
   getAccessToken,
   getSessionUser,
   initAuth,
   isAuthConfigured,
+  isEmbeddedAuthBrowser,
   onAuthStateChange,
   signInWithGoogle,
   signInWithPassword,
@@ -47,6 +49,7 @@ const state = {
   authNotice: null,
   authReturnScreen: null,
   pendingReminderSignup: false,
+  authEmbeddedBrowser: false,
   authDraft: {
     email: "",
     password: "",
@@ -56,6 +59,8 @@ const state = {
 
 const app = document.querySelector("#app");
 const budgetOptions = [25, 50];
+const SEARCH_MIN_DELAY_MS = 2200;
+const REFRESH_MIN_DELAY_MS = 1400;
 const reminderFrequencyOptions = [
   { id: "monthly", label: "Monthly", summary: "every month" },
   { id: "quarterly", label: "Quarterly", summary: "every 3 months" },
@@ -357,11 +362,28 @@ function authPanel(context = "signup") {
       ? "Create an account to save email reminders for this person."
       : "Connect with Google or use email and password.";
 
+  const appUrl = externalAuthAppUrl();
+  const embeddedGoogleCopy = state.authEmbeddedBrowser
+    ? `
+      <p class="auth-passkey-notice">
+        Google passkeys cannot reach your phone from the Cursor browser.
+        <a class="auth-external-link" href="${escapeAttribute(appUrl)}" target="_blank" rel="noopener noreferrer">Open Sirsee in Chrome or Safari</a>
+        and use Connect with Google there.
+      </p>
+    `
+    : `
+      <p class="auth-passkey-notice auth-passkey-notice--subtle">
+        If Google asks for a passkey and your phone does not get a notification, open
+        <a class="auth-external-link" href="${escapeAttribute(appUrl)}" target="_blank" rel="noopener noreferrer">Sirsee in Chrome or Safari</a>.
+      </p>
+    `;
+
   return `
     <section class="auth-panel" aria-label="Sign in to your account">
       <p class="reminder-copy">${signupCopy}</p>
+      ${embeddedGoogleCopy}
       <button class="secondary full-width auth-google-button" type="button" data-auth-google ${state.authLoading ? "disabled" : ""}>
-        Connect with Google
+        ${state.authEmbeddedBrowser ? "Copy link for Chrome or Safari" : "Connect with Google"}
       </button>
       <div class="auth-divider" aria-hidden="true"><span>or</span></div>
       <form class="auth-form" data-auth-form>
@@ -1000,6 +1022,9 @@ async function fetchRecommendations({ refresh = false } = {}) {
   }
   render();
 
+  const startedAt = Date.now();
+  const minDelayMs = refresh ? REFRESH_MIN_DELAY_MS : SEARCH_MIN_DELAY_MS;
+
   try {
     const response = await fetch("/api/recommendations", {
       method: "POST",
@@ -1017,6 +1042,11 @@ async function fetchRecommendations({ refresh = false } = {}) {
     const payload = await response.json();
     if (!response.ok) {
       throw new Error(payload.error || "Could not load local gift ideas.");
+    }
+
+    const remainingDelay = minDelayMs - (Date.now() - startedAt);
+    if (remainingDelay > 0) {
+      await new Promise((resolve) => setTimeout(resolve, remainingDelay));
     }
 
     state.gifts = payload.gifts;
@@ -1384,8 +1414,20 @@ function escapeAttribute(value) {
 async function handleGoogleAuth() {
   state.authLoading = true;
   state.authError = null;
+  state.authNotice = null;
   render();
   try {
+    if (state.authEmbeddedBrowser) {
+      const appUrl = externalAuthAppUrl();
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(appUrl);
+      }
+      state.authNotice =
+        "Copied the Sirsee link. Paste it into Chrome or Safari, then click Connect with Google.";
+      state.authLoading = false;
+      render();
+      return;
+    }
     await signInWithGoogle();
   } catch (error) {
     state.authLoading = false;
@@ -1484,6 +1526,7 @@ async function bootstrap() {
   });
 
   restoreNotificationIntent();
+  state.authEmbeddedBrowser = isEmbeddedAuthBrowser();
   state.authUser = await getSessionUser();
   state.authReady = true;
   if (state.authUser) {

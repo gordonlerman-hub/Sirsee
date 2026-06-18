@@ -76,8 +76,28 @@ On the results screen, use **Show other ideas** to fetch another set of nearby m
 - Merchant-level recommendations only — no live product inventory or exact pricing
 - All proposed gift ideas should include a merchant delivery, shipping, or pickup path
 - No real accounts, payments, or delivery coordination
-- Reminder signups are stored in Supabase Postgres (`public.reminders`) with row-level security; scheduled email delivery is not wired up yet
+- Reminder signups are stored in Supabase Postgres (`public.reminders`) with row-level security
+- Transactional emails via [Resend](https://resend.com): signup confirmation, scheduled digests, unsubscribe confirmation
 - External geocoding/map services are free and rate-limited
+
+### Reminder emails
+
+Three email types:
+
+1. **Signup confirmation** — sent immediately when a reminder is created
+2. **Scheduled digest** — sent when `next_send_at` is due (monthly / quarterly / biannual)
+3. **Unsubscribe confirmation** — sent when a reminder is canceled
+
+**Setup**
+
+1. Add `RESEND_API_KEY` and `RESEND_FROM_EMAIL` to `.env` (without a key, emails are logged to the server console for local dev)
+2. Run the migration in [supabase/migrations/20260318120000_reminder_email_schedule.sql](supabase/migrations/20260318120000_reminder_email_schedule.sql) in the Supabase SQL editor
+3. Add `SUPABASE_SERVICE_ROLE_KEY` to `.env` for scheduled digests (or run `python3 scripts/setup_email_env.py` if your access token has permission)
+4. Scheduled digests run automatically while `python3 server.py` is running (hourly). You can also run manually:
+
+```bash
+python3 scripts/send_reminder_emails.py
+```
 
 ## Project structure
 

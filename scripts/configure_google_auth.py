@@ -62,6 +62,7 @@ def api_request(method: str, path: str, token: str, body: dict | None = None) ->
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
             "Accept": "application/json",
+            "User-Agent": "Sirsee/1.0 (configure-google-auth)",
         },
         method=method,
     )

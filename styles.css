@@ -831,6 +831,31 @@ p {
   font-weight: 800;
 }
 
+.auth-passkey-notice {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #fff8e8;
+  border: 1px solid #f0d48a;
+  color: #6a4d00;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.auth-passkey-notice--subtle {
+  background: #f7f8fa;
+  border-color: var(--line);
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.auth-external-link {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .reminder-frequency-group {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }

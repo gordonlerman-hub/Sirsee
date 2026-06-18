@@ -1,2 +1,4 @@
 data/reminders.json
 .env
+.venv/
+.venv-deploy/

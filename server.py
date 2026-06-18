@@ -8,12 +8,18 @@ import math
 import os
 import random
 import re
+import subprocess
+import sys
+import threading
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+
+from emails import next_send_at_iso, send_signup_confirmation, send_unsubscribe_confirmation
 
 ROOT = Path(__file__).resolve().parent
 MERCHANTS_PATH = ROOT / "data" / "merchants.json"
@@ -1082,6 +1088,8 @@ def supabase_rest(
 def reminder_from_row(row: dict) -> dict:
     created_at = row.get("created_at") or ""
     updated_at = row.get("updated_at") or ""
+    next_send_at = row.get("next_send_at") or ""
+    last_sent_at = row.get("last_sent_at") or ""
     return {
         "userId": row["user_id"],
         "recipientName": row["recipient_name"],
@@ -1093,12 +1101,19 @@ def reminder_from_row(row: dict) -> dict:
         "likes": row.get("likes") or [],
         "customLike": row.get("custom_like") or "",
         "likesSummary": row.get("likes_summary") or "",
+        "nextSendAt": next_send_at.replace("+00:00", "Z") if isinstance(next_send_at, str) else next_send_at,
+        "lastSentAt": last_sent_at.replace("+00:00", "Z") if isinstance(last_sent_at, str) else last_sent_at,
         "createdAt": created_at.replace("+00:00", "Z") if isinstance(created_at, str) else created_at,
         "updatedAt": updated_at.replace("+00:00", "Z") if isinstance(updated_at, str) else updated_at,
     }
 
 
-def reminder_to_row(reminder: dict, *, created_at: str | None = None) -> dict:
+def reminder_to_row(
+    reminder: dict,
+    *,
+    created_at: str | None = None,
+    next_send_at: str | None = None,
+) -> dict:
     row = {
         "user_id": reminder["userId"],
         "recipient_name": reminder["recipientName"],
@@ -1113,7 +1128,16 @@ def reminder_to_row(reminder: dict, *, created_at: str | None = None) -> dict:
     }
     if created_at:
         row["created_at"] = created_at
+    if next_send_at:
+        row["next_send_at"] = next_send_at
     return row
+
+
+def send_email_safely(action: str, callback) -> None:
+    try:
+        callback()
+    except Exception as error:
+        print(f"[sirsee-email] {action} failed: {error}")
 
 
 def verify_access_token(token: str) -> dict:
@@ -1144,12 +1168,16 @@ def verify_access_token(token: str) -> dict:
     return {"id": user_id, "email": email}
 
 
-def authenticate_request(handler: SimpleHTTPRequestHandler) -> tuple[dict, str]:
-    auth_header = handler.headers.get("Authorization", "")
+def authenticate_headers(headers) -> tuple[dict, str]:
+    auth_header = headers.get("Authorization") or headers.get("authorization") or ""
     if not auth_header.startswith("Bearer "):
         raise ValueError("Sign in to manage email reminders.")
     token = auth_header[7:].strip()
     return verify_access_token(token), token
+
+
+def authenticate_request(handler: SimpleHTTPRequestHandler) -> tuple[dict, str]:
+    return authenticate_headers(handler.headers)
 
 
 def sanitize_reminder(raw: dict, user: dict) -> dict:
@@ -1232,9 +1260,17 @@ def list_reminders_for_user(token: str) -> list[dict]:
 def upsert_reminder(raw: dict, user: dict, token: str) -> dict:
     reminder = sanitize_reminder(raw, user)
     existing = find_reminder_row(token, reminder["recipientName"])
+    is_new = existing is None
+    frequency_changed = existing is not None and existing.get("frequency") != reminder["frequency"]
+    missing_schedule = existing is not None and not existing.get("next_send_at")
+    next_send_at = None
+    if is_new or frequency_changed or missing_schedule:
+        next_send_at = next_send_at_iso(reminder["frequency"])
+
     row = reminder_to_row(
         reminder,
         created_at=existing.get("created_at") if existing else None,
+        next_send_at=next_send_at,
     )
     _, payload, _ = supabase_rest(
         "POST",
@@ -1246,7 +1282,10 @@ def upsert_reminder(raw: dict, user: dict, token: str) -> dict:
     )
     if not isinstance(payload, list) or not payload:
         raise ValueError("Could not save your reminder. Try again.")
-    return reminder_from_row(payload[0])
+    saved = reminder_from_row(payload[0])
+    if is_new:
+        send_email_safely("signup confirmation", lambda: send_signup_confirmation(saved))
+    return saved
 
 
 def delete_reminder(token: str, recipient_name: str) -> bool:
@@ -1254,20 +1293,41 @@ def delete_reminder(token: str, recipient_name: str) -> bool:
     if not recipient_name:
         raise ValueError("Recipient name is required.")
 
-    _, _, headers = supabase_rest(
+    existing = find_reminder_row(token, recipient_name)
+    if not existing:
+        return False
+
+    reminder = reminder_from_row(existing)
+    query = {"id": f"eq.{existing['id']}"} if existing.get("id") else {
+        "recipient_name": postgrest_eq(recipient_name)
+    }
+
+    status, _, headers = supabase_rest(
         "DELETE",
         "reminders",
         token,
-        query={"recipient_name": postgrest_eq(recipient_name)},
+        query=query,
         prefer="count=exact",
     )
+
     content_range = headers.get("Content-Range") or headers.get("content-range") or ""
-    if "/" not in content_range:
+    deleted_count = None
+    if "/" in content_range:
+        try:
+            deleted_count = int(content_range.rsplit("/", 1)[-1])
+        except ValueError:
+            deleted_count = None
+
+    if deleted_count == 0:
         return False
-    try:
-        return int(content_range.rsplit("/", 1)[-1]) > 0
-    except ValueError:
+    if deleted_count is None and status not in {200, 204}:
         return False
+
+    send_email_safely(
+        "unsubscribe confirmation",
+        lambda: send_unsubscribe_confirmation(reminder),
+    )
+    return True
 
 
 class SirseeHandler(SimpleHTTPRequestHandler):
@@ -1379,8 +1439,35 @@ class SirseeHandler(SimpleHTTPRequestHandler):
             super().log_message(format, *args)
 
 
+def start_reminder_email_scheduler() -> None:
+    if not os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip():
+        return
+
+    script = ROOT / "scripts" / "send_reminder_emails.py"
+    if not script.exists():
+        return
+
+    def run_loop() -> None:
+        while True:
+            try:
+                subprocess.run(
+                    [sys.executable, str(script)],
+                    cwd=str(ROOT),
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+            except Exception as error:
+                print(f"[sirsee-email] scheduler error: {error}")
+            time.sleep(int(os.environ.get("REMINDER_EMAIL_INTERVAL_SECONDS", "3600")))
+
+    threading.Thread(target=run_loop, daemon=True, name="sirsee-email-scheduler").start()
+    print("Reminder email scheduler: checking hourly for due digests.")
+
+
 def main() -> None:
     port = int(os.environ.get("PORT", "4174"))
+    start_reminder_email_scheduler()
     server = ThreadingHTTPServer(("127.0.0.1", port), SirseeHandler)
     print(f"Sirsee server running at http://127.0.0.1:{port}")
     print("Recommendations API: POST /api/recommendations")
