@@ -1,4 +1,9 @@
 {
+  "rewrites": [
+    { "source": "/api/config", "destination": "/api/index" },
+    { "source": "/api/recommendations", "destination": "/api/index" },
+    { "source": "/api/reminders", "destination": "/api/index" }
+  ],
   "functions": {
     "api/index.py": {
       "maxDuration": 60

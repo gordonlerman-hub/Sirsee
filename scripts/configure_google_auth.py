@@ -22,6 +22,13 @@ LOCAL_ORIGINS = (
 )
 
 
+def production_origins() -> tuple[str, ...]:
+    app_url = os.environ.get("APP_URL", "").strip().rstrip("/")
+    if not app_url or "127.0.0.1" in app_url or "localhost" in app_url:
+        return ()
+    return (app_url, f"{app_url}/**")
+
+
 def load_dotenv() -> None:
     env_path = ROOT / ".env"
     if not env_path.exists():
@@ -83,10 +90,17 @@ def api_request(method: str, path: str, token: str, body: dict | None = None) ->
 def merge_redirect_urls(existing: str) -> str:
     current = [part.strip() for part in (existing or "").split(",") if part.strip()]
     merged: list[str] = []
-    for value in current + list(LOCAL_ORIGINS):
+    for value in current + list(LOCAL_ORIGINS) + list(production_origins()):
         if value not in merged:
             merged.append(value)
     return ",".join(merged)
+
+
+def site_url() -> str:
+    app_url = os.environ.get("APP_URL", "").strip().rstrip("/")
+    if app_url and "127.0.0.1" not in app_url and "localhost" not in app_url:
+        return app_url
+    return "http://127.0.0.1:4174"
 
 
 def main() -> int:
@@ -98,7 +112,7 @@ def main() -> int:
 
     current = api_request("GET", f"/projects/{ref}/config/auth", token)
     payload = {
-        "site_url": "http://127.0.0.1:4174",
+        "site_url": site_url(),
         "uri_allow_list": merge_redirect_urls(current.get("uri_allow_list", "")),
         "external_google_enabled": True,
         "external_google_client_id": client_id,

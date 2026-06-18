@@ -2,3 +2,5 @@ data/reminders.json
 .env
 .venv/
 .venv-deploy/
+.tools/
+.vercel
