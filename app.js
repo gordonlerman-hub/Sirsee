@@ -15,16 +15,17 @@ import {
 const state = {
   screen: "brief",
   brief: {
-    recipientName: "Nora",
+    recipientName: "",
     recipientGender: "female",
     budget: 50,
-    zipCode: "60614",
+    zipCode: "",
     likes: ["flowers", "coffee", "sweets"],
     customLike: ""
   },
   selectedGiftId: null,
   gifts: [],
   location: null,
+  matchMeta: null,
   loading: false,
   loadingRefresh: false,
   hasMore: false,
@@ -49,6 +50,7 @@ const state = {
   authNotice: null,
   authReturnScreen: null,
   pendingReminderSignup: false,
+  pendingReminderRecipientName: null,
   authEmbeddedBrowser: false,
   authDraft: {
     email: "",
@@ -66,28 +68,14 @@ const reminderFrequencyOptions = [
   { id: "quarterly", label: "Quarterly", summary: "every 3 months" },
   { id: "biannual", label: "Twice a year", summary: "every 6 months" }
 ];
-const genderOptions = [
-  { id: "female", label: "Female", summary: "Shopping for her", defaults: ["flowers", "coffee", "sweets"] },
-  { id: "male", label: "Male", summary: "Shopping for him", defaults: ["coffee", "sweets", "home"] }
+const wifeLikeOptions = [
+  { id: "flowers", label: "Flowers or plants", image: "./assets/likes/flowers-plants.png", categories: ["Flowers"] },
+  { id: "sweets", label: "Chocolate & pastries", image: "./assets/likes/chocolate-pastries.png", categories: ["Sweets"] },
+  { id: "coffee", label: "Coffee or tea", image: "./assets/likes/coffee-tea.png", categories: ["Coffee/tea", "Sweets"] },
+  { id: "home", label: "Candles & home", image: "./assets/likes/candles-home.png", categories: ["Local goods"] },
+  { id: "foodie", label: "Foodie treats", image: "./assets/likes/foodie-treats.png", categories: ["Sweets", "Coffee/tea"] },
+  { id: "cozy", label: "Cozy evening", image: "./assets/likes/cozy-night.png", categories: ["Coffee/tea", "Local goods"] }
 ];
-const likeOptionsByGender = {
-  female: [
-    { id: "flowers", label: "Flowers or plants", image: "./assets/likes/flowers-plants.png", categories: ["Flowers"] },
-    { id: "sweets", label: "Chocolate & pastries", image: "./assets/likes/chocolate-pastries.png", categories: ["Sweets"] },
-    { id: "coffee", label: "Coffee or tea", image: "./assets/likes/coffee-tea.png", categories: ["Coffee/tea", "Sweets"] },
-    { id: "home", label: "Candles & home", image: "./assets/likes/candles-home.png", categories: ["Local goods"] },
-    { id: "foodie", label: "Foodie treats", image: "./assets/likes/foodie-treats.png", categories: ["Sweets", "Coffee/tea"] },
-    { id: "cozy", label: "Cozy night in", image: "./assets/likes/cozy-night.png", categories: ["Coffee/tea", "Local goods"] }
-  ],
-  male: [
-    { id: "coffee", label: "Coffee beans or tea", image: "./assets/likes/coffee-tea.png", categories: ["Coffee/tea", "Sweets"] },
-    { id: "sweets", label: "Bakery treats", image: "./assets/likes/chocolate-pastries.png", categories: ["Sweets"] },
-    { id: "home", label: "Home goods", image: "./assets/likes/home-goods.png", categories: ["Local goods"] },
-    { id: "plants", label: "Plants", image: "./assets/likes/flowers-plants.png", categories: ["Flowers"] },
-    { id: "foodie", label: "Foodie treats", image: "./assets/likes/foodie-treats.png", categories: ["Sweets", "Coffee/tea"] },
-    { id: "bar", label: "Bar cart", image: "./assets/likes/bar-cart.png", categories: ["Bar & spirits"] }
-  ]
-};
 
 function render() {
   app.innerHTML = `
@@ -95,6 +83,29 @@ function render() {
     ${screen()}
   `;
   bindEvents();
+}
+
+function historyUrl() {
+  return `${window.location.pathname}${window.location.search}`;
+}
+
+function navigationHistoryState() {
+  return { sirseeScreen: state.screen };
+}
+
+function syncNavigationHistory(mode = "push") {
+  const snapshot = navigationHistoryState();
+  const url = historyUrl();
+  if (mode === "replace") {
+    window.history.replaceState(snapshot, "", url);
+  } else {
+    window.history.pushState(snapshot, "", url);
+  }
+}
+
+function setScreen(screen, { historyMode = "push" } = {}) {
+  state.screen = screen;
+  syncNavigationHistory(historyMode);
 }
 
 function topbar() {
@@ -105,12 +116,11 @@ function topbar() {
         <span class="brand-mark" aria-hidden="true">S</span>
         <span>
           <span class="brand-title">Sirsee</span>
-          <span class="brand-caption">Small spontaneous gifts in Chicagoland.</span>
+          <span class="brand-caption">Thoughtful local gifts for your wife.</span>
         </span>
       </button>
       <div class="topbar-nav">
         <button class="topbar-link ${onAccount ? "is-active" : ""}" type="button" data-go="reminders">Account</button>
-        ${state.authUser ? `<button class="topbar-link" type="button" data-auth-sign-out>Sign out</button>` : ""}
         <span class="city-badge">Chicagoland pilot</span>
       </div>
     </header>
@@ -128,8 +138,8 @@ function screen() {
 
 function loadingScreen() {
   const heading = state.loadingRefresh
-    ? `Finding more ideas for ${escapeHtml(state.brief.recipientName)}.`
-    : `Searching Chicagoland for ${escapeHtml(state.brief.recipientName)}.`;
+    ? `Finding more gifts for ${escapeHtml(state.brief.recipientName)}.`
+    : `Finding local gifts for ${escapeHtml(state.brief.recipientName)}.`;
   const copy = state.loadingRefresh
     ? "Pulling another set of nearby merchants that fit this brief."
     : `Matching your brief to real nearby merchants around ZIP ${escapeHtml(state.brief.zipCode)}.`;
@@ -165,10 +175,10 @@ function briefScreen() {
   return `
     <section class="brief-screen">
       <div class="brief-copy">
-        <p class="eyebrow">Chicagoland gift finder</p>
-        <h1>A small gift, just because.</h1>
+        <p class="eyebrow">Chicagoland · gifts for her</p>
+        <h1>A small gift she didn't see coming.</h1>
         <p>
-          Sirsee is for spontaneous gift giving: partners, friends, parents, siblings, or anyone who would appreciate a small unexpected thing. Share a few clues and get one strong local pick plus two backups.
+          Sirsee helps Chicagoland husbands surprise their wives with real gifts from local shops — one strong pick and two backups, matched to her tastes and your budget.
         </p>
         <div class="promise-list" aria-label="What Sirsee returns">
           <span>Artisanal local shops</span>
@@ -178,23 +188,15 @@ function briefScreen() {
         </div>
       </div>
 
-      ${savedRemindersPreview()}
-
       <form class="brief-panel" data-brief-form>
         ${state.error ? `<div class="error-banner" role="alert">${escapeHtml(state.error)}</div>` : ""}
         <div class="section-heading">
-          <p class="eyebrow">Quick brief</p>
-          <h2>Who are you surprising?</h2>
+          <p class="eyebrow">Her brief</p>
+          <h2>What does she like?</h2>
         </div>
         <div class="field-grid">
-          ${inputField("recipientName", "Recipient name", state.brief.recipientName)}
-          <div class="field">
-            <span class="field-title">Shopping for</span>
-            <div class="segment-group" role="group" aria-label="Recipient gender">
-              ${genderOptions.map(genderButton).join("")}
-            </div>
-          </div>
-          ${inputField("zipCode", "Chicagoland ZIP code", state.brief.zipCode, "text", "60025", "numeric")}
+          ${inputField("recipientName", "Her name", state.brief.recipientName, "text", "her name", "", true)}
+          ${inputField("zipCode", "Chicagoland ZIP code", state.brief.zipCode, "text", "enter zip code", "numeric", true)}
           <div class="field">
             <span class="field-title">Budget</span>
             <div class="segment-group budget-group" role="group" aria-label="Budget">
@@ -209,7 +211,7 @@ function briefScreen() {
             ${activeLikeOptions().map(likeTile).join("")}
           </div>
         </div>
-        <button class="primary full-width" type="submit">Find gift ideas</button>
+        <button class="primary full-width" type="submit">Find gift ideas for her</button>
       </form>
     </section>
   `;
@@ -225,7 +227,8 @@ function resultsScreen() {
       <div class="results-header">
         <div>
           <p class="eyebrow">${escapeHtml(placeLabel)} · ZIP ${escapeHtml(state.location?.zipCode || state.brief.zipCode)}</p>
-          <h1>Spontaneous gift ideas for ${escapeHtml(state.brief.recipientName)}</h1>
+          <h1>Gift ideas for ${escapeHtml(state.brief.recipientName)}</h1>
+          <p class="results-match-line">${escapeHtml(resultsMatchLine())}</p>
           <p>${briefSummary()}</p>
         </div>
         <div class="results-actions">
@@ -254,15 +257,30 @@ function resultsScreen() {
 }
 
 function backupSectionHeading(count) {
-  if (count === 1) return "One easy alternative.";
-  if (count === 2) return "Two easy alternatives.";
-  return `${count} more options to explore.`;
+  if (count === 1) return "One more matched idea.";
+  return `${count} more matched ideas.`;
+}
+
+function resultsMatchLine() {
+  const count = recommendations().length;
+  const meta = state.matchMeta;
+
+  if (!count) {
+    return "Still looking for strong local matches.";
+  }
+  if (count === 1) {
+    return "1 strong local match for this brief.";
+  }
+  if (meta?.eligible && meta.eligible > count) {
+    return `${count} strong local matches for this brief (${meta.eligible} passed our quality bar).`;
+  }
+  return `${count} strong local matches for this brief.`;
 }
 
 function detailScreen() {
   const gift = recommendations().find((item) => item.id === state.selectedGiftId) || recommendations()[0];
   if (!gift) {
-    state.screen = "brief";
+    setScreen("brief", { historyMode: "replace" });
     return briefScreen();
   }
 
@@ -302,6 +320,14 @@ function detailScreen() {
   `;
 }
 
+function accountSignOutButton() {
+  return `
+    <button class="text-button account-sign-out-button" type="button" data-auth-sign-out ${state.authLoading ? "disabled" : ""}>
+      Sign out
+    </button>
+  `;
+}
+
 function remindersScreen() {
   if (!state.authReady) {
     return `
@@ -314,18 +340,18 @@ function remindersScreen() {
   if (!state.authUser) {
     const name = state.authReturnScreen === "results" ? state.brief.recipientName.trim() : "";
     const reminderContext = name
-      ? `<p>Sign in or create an account to get ${escapeHtml(frequencySummary(state.reminderDraft.frequency))} email reminders for <strong>${escapeHtml(name)}</strong>.</p>`
-      : "<p>Create an account or sign in to save email reminders and manage your gift nudges.</p>";
+      ? `<p>Sign in or create an account to get ${escapeHtml(frequencySummary(state.reminderDraft.frequency))} gift reminders for <strong>${escapeHtml(name)}</strong>.</p>`
+      : "<p>Create an account or sign in to save email reminders and keep surprising her on schedule.</p>";
 
     return `
       <section class="reminders-screen">
         <div class="section-heading">
           <p class="eyebrow">Account</p>
-          <h1>${name ? `Sign in for ${escapeHtml(name)}` : "Sign in to Sirsee"}</h1>
+          <h1>${name ? `Sign in for ${escapeHtml(name)}` : "Sign in to save her reminders"}</h1>
           ${reminderContext}
         </div>
         ${authPanel("signup")}
-        ${state.authReturnScreen === "results" ? `<button class="secondary full-width" type="button" data-go="results">Back to gift ideas</button>` : `<button class="secondary full-width" type="button" data-go="brief">Back to gift finder</button>`}
+        ${state.authReturnScreen === "results" ? `<button class="secondary full-width" type="button" data-go="results">Back to her gift ideas</button>` : `<button class="secondary full-width" type="button" data-go="brief">Back to gift finder</button>`}
       </section>
     `;
   }
@@ -339,11 +365,14 @@ function remindersScreen() {
       </div>
       <div class="account-reminders-section">
         <h2 class="account-section-title">Email reminders</h2>
-        <p class="reminder-copy">People Sirsee nudges you about on a schedule. Tap <strong>Settings</strong> to change timing or cancel.</p>
+        <p class="reminder-copy">Gift reminders for your wife on a schedule. Tap <strong>Settings</strong> to change timing or cancel.</p>
         ${state.reminderError ? `<p class="reminder-note reminder-note--error">${escapeHtml(state.reminderError)}</p>` : ""}
         ${state.reminders.length ? reminderList(state.reminders) : emptyRemindersState()}
       </div>
-      <button class="secondary" type="button" data-go="brief">Start a new brief</button>
+      <div class="account-actions">
+        <button class="secondary" type="button" data-go="brief">Start a new brief</button>
+        ${accountSignOutButton()}
+      </div>
     </section>
   `;
 }
@@ -359,31 +388,26 @@ function authPanel(context = "signup") {
 
   const signupCopy =
     context === "signup"
-      ? "Create an account to save email reminders for this person."
+      ? "Create an account to save gift reminders for your wife."
       : "Connect with Google or use email and password.";
 
   const appUrl = externalAuthAppUrl();
   const embeddedGoogleCopy = state.authEmbeddedBrowser
     ? `
       <p class="auth-passkey-notice">
-        Google passkeys cannot reach your phone from the Cursor browser.
-        <a class="auth-external-link" href="${escapeAttribute(appUrl)}" target="_blank" rel="noopener noreferrer">Open Sirsee in Chrome or Safari</a>
-        and use Connect with Google there.
+        Google sign-in does not work in Cursor's preview browser.
+        <a class="auth-external-link" href="${escapeAttribute(appUrl)}" target="_blank" rel="noopener noreferrer">Open Sirsee on your phone or in your browser</a>
+        and connect your account there.
       </p>
     `
-    : `
-      <p class="auth-passkey-notice auth-passkey-notice--subtle">
-        If Google asks for a passkey and your phone does not get a notification, open
-        <a class="auth-external-link" href="${escapeAttribute(appUrl)}" target="_blank" rel="noopener noreferrer">Sirsee in Chrome or Safari</a>.
-      </p>
-    `;
+    : "";
 
   return `
     <section class="auth-panel" aria-label="Sign in to your account">
       <p class="reminder-copy">${signupCopy}</p>
       ${embeddedGoogleCopy}
       <button class="secondary full-width auth-google-button" type="button" data-auth-google ${state.authLoading ? "disabled" : ""}>
-        ${state.authEmbeddedBrowser ? "Copy link for Chrome or Safari" : "Connect with Google"}
+        ${state.authEmbeddedBrowser ? "Copy link to open elsewhere" : "Connect with Google"}
       </button>
       <div class="auth-divider" aria-hidden="true"><span>or</span></div>
       <form class="auth-form" data-auth-form>
@@ -457,7 +481,7 @@ function reminderSettingsScreen() {
       <div class="section-heading">
         <p class="eyebrow">Notification settings</p>
         <h1>${escapeHtml(reminder.recipientName)}</h1>
-        <p>Adjust how often Sirsee emails you, or cancel reminders for this person.</p>
+        <p>Adjust how often Sirsee emails you with gift ideas for her, or cancel reminders.</p>
       </div>
 
       <div class="reminder-settings-summary">
@@ -483,6 +507,7 @@ function reminderSettingsScreen() {
           class="secondary full-width reminder-cancel-button"
           type="button"
           data-remove-reminder="${escapeAttribute(reminder.recipientName)}"
+          data-reminder-id="${escapeAttribute(reminder.id || "")}"
           ${state.reminderSaving ? "disabled" : ""}
         >
           Cancel reminders for ${escapeHtml(reminder.recipientName)}
@@ -494,7 +519,7 @@ function reminderSettingsScreen() {
 }
 
 function reminderPanel() {
-  const name = state.brief.recipientName.trim() || "them";
+  const name = state.brief.recipientName.trim() || "her";
   const existing = reminderForRecipient(name);
 
   if (existing) {
@@ -518,9 +543,9 @@ function reminderPanel() {
   return `
     <section class="reminder-panel" aria-label="Set a recurring reminder for ${escapeHtml(name)}">
       <div class="section-heading">
-        <p class="eyebrow">Keep the habit going</p>
+        <p class="eyebrow">Don't let it slip</p>
         <h2>Get email reminders for ${escapeHtml(name)}.</h2>
-        <p>Pick a schedule and Sirsee will send fresh local gift ideas so spontaneous gifting does not slip.</p>
+        <p>Pick a schedule and Sirsee will send fresh local gift ideas so you keep surprising her.</p>
       </div>
       ${reminderSignupForm(name)}
     </section>
@@ -532,6 +557,7 @@ function reminderSignupForm(name) {
 
   return `
       <form class="reminder-form" data-reminder-form>
+        <input type="hidden" data-reminder-recipient value="${escapeAttribute(name)}" />
         <div class="field">
           <span class="field-title">How often?</span>
           <div class="segment-group reminder-frequency-group" role="group" aria-label="Reminder frequency">
@@ -543,22 +569,8 @@ function reminderSignupForm(name) {
           ${state.reminderSaving ? "Saving…" : signedIn ? `Set reminder for ${escapeHtml(name)}` : "Sign up for notifications"}
         </button>
         ${state.reminderError ? `<p class="reminder-note reminder-note--error">${escapeHtml(state.reminderError)}</p>` : ""}
-        <p class="reminder-note">${signedIn ? "We will email you on that schedule with fresh Chicagoland picks for this brief." : "You will sign in or create an account next."}</p>
+        <p class="reminder-note">${signedIn ? "We will email you on that schedule with fresh Chicagoland picks matched to her brief." : "You will sign in or create an account next."}</p>
       </form>
-  `;
-}
-
-function savedRemindersPreview() {
-  if (!state.authUser || !state.reminders.length) return "";
-
-  return `
-    <aside class="saved-reminders" aria-label="Saved recurring reminders">
-      <div class="saved-reminders-header">
-        <p class="eyebrow">Your reminders</p>
-        <button class="text-button" type="button" data-go="reminders">Account</button>
-      </div>
-      ${reminderList(state.reminders.slice(0, 2))}
-    </aside>
   `;
 }
 
@@ -578,7 +590,12 @@ function reminderListItem(reminder) {
         <p class="reminder-meta">${escapeHtml(frequencySummary(reminder.frequency))} · ${escapeHtml(reminder.email)}</p>
         <p class="reminder-meta">${escapeHtml(reminderBriefSummary(reminder))}</p>
       </div>
-      <button class="secondary reminder-settings-button" type="button" data-manage-reminder="${escapeAttribute(reminder.recipientName)}">Settings</button>
+      <button
+        class="secondary reminder-settings-button"
+        type="button"
+        data-manage-reminder="${escapeAttribute(reminder.recipientName)}"
+        data-reminder-id="${escapeAttribute(reminder.id || "")}"
+      >Settings</button>
     </li>
   `;
 }
@@ -586,8 +603,8 @@ function reminderListItem(reminder) {
 function emptyRemindersState() {
   return `
     <div class="empty-reminders">
-      <p>No one is on your reminder list yet.</p>
-      <p>Find gift ideas for someone, sign in on the results screen, then choose how often to get nudges.</p>
+      <p>No wife reminders yet.</p>
+      <p>Find gifts for her first, sign in on the results screen, then choose how often to get reminders.</p>
     </div>
   `;
 }
@@ -623,7 +640,7 @@ function reminderBriefSummary(reminder) {
 }
 
 function reminderGenderSummary(reminder) {
-  return genderOptions.find((option) => option.id === reminder.recipientGender)?.summary || "Shopping for them";
+  return reminder.recipientGender === "male" ? "Gifts for him" : "Gifts for her";
 }
 
 function openReminderSettings(name) {
@@ -633,7 +650,7 @@ function openReminderSettings(name) {
   state.editingReminderName = reminder.recipientName;
   state.reminderEditDraft.frequency = reminder.frequency;
   state.reminderError = null;
-  state.screen = "reminder-settings";
+  setScreen("reminder-settings");
   render();
 }
 
@@ -682,11 +699,23 @@ async function fetchReminders() {
   }
 }
 
-async function saveReminder() {
-  const recipientName = state.brief.recipientName.trim();
+function resolveReminderRecipientName() {
+  const field = document.querySelector("[data-reminder-recipient]");
+  if (field?.value?.trim()) {
+    return field.value.trim();
+  }
+  if (state.pendingReminderRecipientName?.trim()) {
+    return state.pendingReminderRecipientName.trim();
+  }
+  return state.brief.recipientName.trim();
+}
+
+async function saveReminder(recipientNameOverride) {
+  const recipientName = (recipientNameOverride || resolveReminderRecipientName()).trim();
   if (!recipientName) return;
 
   if (!state.authUser) {
+    state.pendingReminderRecipientName = recipientName;
     goToAuthForNotifications();
     return;
   }
@@ -724,6 +753,11 @@ async function saveReminder() {
 }
 
 function goToAuthForNotifications() {
+  const recipientName = resolveReminderRecipientName();
+  if (!recipientName) return;
+
+  state.pendingReminderRecipientName = recipientName;
+  state.brief.recipientName = recipientName;
   state.authReturnScreen = "results";
   state.pendingReminderSignup = true;
   state.authMode = "signup";
@@ -731,7 +765,7 @@ function goToAuthForNotifications() {
   state.authNotice = null;
   state.reminderError = null;
   persistNotificationIntent();
-  state.screen = "reminders";
+  setScreen("reminders");
   render();
 }
 
@@ -742,6 +776,7 @@ function persistNotificationIntent() {
       "sirsee-reminder-intent",
       JSON.stringify({
         brief: state.brief,
+        recipientName: state.pendingReminderRecipientName || state.brief.recipientName.trim(),
         frequency: state.reminderDraft.frequency
       })
     );
@@ -755,6 +790,13 @@ function restoreNotificationIntent() {
     if (sessionStorage.getItem("sirsee-pending-reminder-signup") !== "1") {
       return false;
     }
+
+    const returningFromAuth = new URLSearchParams(window.location.search).has("code");
+    if (!returningFromAuth) {
+      clearNotificationIntent();
+      return false;
+    }
+
     const raw = sessionStorage.getItem("sirsee-reminder-intent");
     if (!raw) {
       return false;
@@ -762,6 +804,11 @@ function restoreNotificationIntent() {
     const intent = JSON.parse(raw);
     state.brief = intent.brief;
     state.reminderDraft.frequency = intent.frequency || state.reminderDraft.frequency;
+    const recipientName = (intent.recipientName || intent.brief?.recipientName || "").trim();
+    if (recipientName) {
+      state.pendingReminderRecipientName = recipientName;
+      state.brief.recipientName = recipientName;
+    }
     state.pendingReminderSignup = true;
     state.authReturnScreen = "results";
     return true;
@@ -784,16 +831,27 @@ async function completePendingReminderSignup() {
     return false;
   }
 
+  const recipientName = resolveReminderRecipientName();
+  if (!recipientName) {
+    state.pendingReminderSignup = false;
+    state.pendingReminderRecipientName = null;
+    clearNotificationIntent();
+    return false;
+  }
+
   state.pendingReminderSignup = false;
+  state.pendingReminderRecipientName = recipientName;
+  state.brief.recipientName = recipientName;
   state.authReturnScreen = null;
   clearNotificationIntent();
-  state.screen = "results";
+  setScreen("results", { historyMode: "replace" });
 
   if (!state.gifts.length) {
     await fetchRecommendations();
   }
   await fetchReminders();
-  await saveReminder();
+  await saveReminder(recipientName);
+  state.pendingReminderRecipientName = null;
   return true;
 }
 
@@ -819,7 +877,7 @@ async function updateReminderSettings() {
     ];
     state.reminderError = null;
     state.editingReminderName = null;
-    state.screen = "reminders";
+    setScreen("reminders");
   } catch (error) {
     state.reminderError = error.message || "Could not save your changes.";
   } finally {
@@ -828,10 +886,12 @@ async function updateReminderSettings() {
   }
 }
 
-async function removeReminder(name) {
+async function removeReminder(name, reminderId = "") {
   const normalized = name.trim().toLowerCase();
   const reminder = state.reminders.find(
-    (item) => item.recipientName.trim().toLowerCase() === normalized
+    (item) =>
+      (reminderId && item.id === reminderId) ||
+      item.recipientName.trim().toLowerCase() === normalized
   );
   if (!reminder) return;
 
@@ -849,6 +909,7 @@ async function removeReminder(name) {
       method: "DELETE",
       headers,
       body: JSON.stringify({
+        id: reminder.id || reminderId || null,
         recipientName: reminder.recipientName
       })
     });
@@ -863,7 +924,7 @@ async function removeReminder(name) {
     state.reminderError = null;
     if (wasEditing) {
       state.editingReminderName = null;
-      state.screen = "reminders";
+      setScreen("reminders");
     }
   } catch (error) {
     state.reminderError = error.message || "Could not remove your reminder.";
@@ -928,11 +989,13 @@ function backupCard(gift) {
   `;
 }
 
-function inputField(key, label, value, type = "text", placeholder = "", inputMode = "") {
+function inputField(key, label, value, type = "text", placeholder = "", inputMode = "", required = false) {
+  const requiredAttr = required ? ' required aria-required="true"' : "";
+  const zipAttrs = key === "zipCode" ? ' maxlength="5" pattern="\\d{5}"' : "";
   return `
     <div class="field">
       <label for="${key}">${label}</label>
-      <input id="${key}" class="input" data-brief="${key}" type="${type}" value="${escapeAttribute(value)}" placeholder="${escapeAttribute(placeholder)}" inputmode="${escapeAttribute(inputMode)}" />
+      <input id="${key}" class="input" data-brief="${key}" type="${type}" value="${escapeAttribute(value)}" placeholder="${escapeAttribute(placeholder)}" inputmode="${escapeAttribute(inputMode)}"${requiredAttr}${zipAttrs} />
     </div>
   `;
 }
@@ -968,17 +1031,8 @@ function customBudgetField() {
   `;
 }
 
-function genderButton(option) {
-  const selected = state.brief.recipientGender === option.id;
-  return `
-    <button class="segment ${selected ? "is-selected" : ""}" type="button" data-gender="${option.id}" aria-pressed="${selected}">
-      ${option.label}
-    </button>
-  `;
-}
-
 function activeLikeOptions() {
-  return likeOptionsByGender[state.brief.recipientGender] || likeOptionsByGender.female;
+  return wifeLikeOptions;
 }
 
 function recommendations() {
@@ -1006,13 +1060,39 @@ function locationSummary(gift) {
 }
 
 function syncBriefFromForm() {
-  document.querySelectorAll("[data-brief]").forEach((field) => {
+  document.querySelectorAll("[data-brief-form] [data-brief]").forEach((field) => {
     state.brief[field.dataset.brief] = field.value;
   });
 }
 
+function briefSearchValidationError() {
+  const recipientName = state.brief.recipientName.trim();
+  const zipCode = state.brief.zipCode.trim().replace(/\D/g, "").slice(0, 5);
+
+  if (!recipientName) {
+    return "Enter her name.";
+  }
+  if (!/^\d{5}$/.test(zipCode)) {
+    return "Enter a valid 5-digit Chicagoland ZIP code.";
+  }
+
+  state.brief.recipientName = recipientName;
+  state.brief.recipientGender = "female";
+  state.brief.zipCode = zipCode;
+  return null;
+}
+
 async function fetchRecommendations({ refresh = false } = {}) {
   syncBriefFromForm();
+  if (!refresh) {
+    const validationError = briefSearchValidationError();
+    if (validationError) {
+      state.error = validationError;
+      setScreen("brief", { historyMode: "replace" });
+      render();
+      return;
+    }
+  }
   state.loading = true;
   state.loadingRefresh = refresh;
   state.error = null;
@@ -1051,17 +1131,18 @@ async function fetchRecommendations({ refresh = false } = {}) {
 
     state.gifts = payload.gifts;
     state.location = payload.location;
+    state.matchMeta = payload.matchMeta || null;
     state.hasMore = Boolean(payload.hasMore);
     state.shownGiftIds = [...new Set([...state.shownGiftIds, ...payload.gifts.map((gift) => gift.id)])];
     state.loading = false;
     state.loadingRefresh = false;
-    state.screen = "results";
+    setScreen("results");
     render();
   } catch (error) {
     state.loading = false;
     state.loadingRefresh = false;
     state.error = error.message || "Could not load local gift ideas.";
-    state.screen = refresh ? "results" : "brief";
+    setScreen(refresh ? "results" : "brief", { historyMode: "replace" });
     render();
   }
 }
@@ -1076,7 +1157,7 @@ function whyThisWorks(gift) {
 
 function openStreetMapBlurb(gift) {
   const company = `${gift.merchant} is a local ${merchantDescriptor(gift)} ${placePhrase(gift)}.`;
-  const body = `Sirsee surfaced them from nearby Chicagoland map data, and ${lowerGiftName(gift)} is a practical spontaneous-gift starting point.`;
+  const body = `Sirsee surfaced them from nearby Chicagoland map data, and ${lowerGiftName(gift)} is a practical gift she'd appreciate.`;
   const delivery = deliverySentence(gift) || "Check the merchant site for local pickup or delivery options.";
   return [company, body, delivery].join(" ");
 }
@@ -1108,7 +1189,7 @@ function bodyParagraph(gift) {
   }
 
   if (/^It is a\b|^It is an\b|^It is right\b|^It is close\b|^It is a reliable\b/i.test(reason)) {
-    return `${reason.replace(/^It is/, "They are")} For a spontaneous gift, consider their ${lowerName}.`;
+    return `${reason.replace(/^It is/, "They are")} For a gift for her, consider their ${lowerName}.`;
   }
 
   if (/^The |^Their /i.test(reason)) {
@@ -1199,30 +1280,31 @@ function briefLikeLabels() {
 }
 
 function genderSummary() {
-  return genderOptions.find((option) => option.id === state.brief.recipientGender)?.summary || "Shopping for them";
+  return "Gifts for her";
 }
 
 function bindEvents() {
   document.querySelectorAll("[data-go]").forEach((control) => {
     control.addEventListener("click", async () => {
-      state.screen = control.dataset.go;
+      const nextScreen = control.dataset.go;
       state.error = null;
-      if (control.dataset.go !== "reminder-settings") {
+      if (nextScreen !== "reminder-settings") {
         state.editingReminderName = null;
       }
-      if (control.dataset.go !== "results" && control.dataset.go !== "reminders") {
+      if (nextScreen !== "results" && nextScreen !== "reminders") {
         state.authReturnScreen = null;
         state.pendingReminderSignup = false;
         clearNotificationIntent();
       }
-      if (control.dataset.go === "results") {
+      if (nextScreen === "results") {
         state.authReturnScreen = null;
         state.pendingReminderSignup = false;
         clearNotificationIntent();
       }
-      if (control.dataset.go === "reminders" && state.authUser) {
+      if (nextScreen === "reminders" && state.authUser) {
         await fetchReminders();
       }
+      setScreen(nextScreen);
       render();
     });
   });
@@ -1261,16 +1343,6 @@ function bindEvents() {
     });
   });
 
-  document.querySelectorAll("[data-gender]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const gender = button.dataset.gender;
-      const option = genderOptions.find((item) => item.id === gender);
-      state.brief.recipientGender = gender;
-      state.brief.likes = option ? [...option.defaults] : [];
-      render();
-    });
-  });
-
   document.querySelectorAll("[data-like]").forEach((button) => {
     button.addEventListener("click", () => {
       const id = button.dataset.like;
@@ -1283,7 +1355,7 @@ function bindEvents() {
   document.querySelectorAll("[data-detail]").forEach((button) => {
     button.addEventListener("click", () => {
       state.selectedGiftId = button.dataset.detail;
-      state.screen = "detail";
+      setScreen("detail");
       render();
     });
   });
@@ -1312,7 +1384,7 @@ function bindEvents() {
   document.querySelectorAll("[data-remove-reminder]").forEach((button) => {
     button.addEventListener("click", () => {
       if (state.reminderSaving) return;
-      removeReminder(button.dataset.removeReminder);
+      removeReminder(button.dataset.removeReminder, button.dataset.reminderId || "");
     });
   });
 
@@ -1345,6 +1417,7 @@ function bindEvents() {
   if (form) {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
+      if (!form.reportValidity()) return;
       fetchRecommendations();
     });
   }
@@ -1423,12 +1496,13 @@ async function handleGoogleAuth() {
         await navigator.clipboard.writeText(appUrl);
       }
       state.authNotice =
-        "Copied the Sirsee link. Paste it into Chrome or Safari, then click Connect with Google.";
+        "Copied the Sirsee link. Open it on your phone or in your browser, then connect with Google.";
       state.authLoading = false;
       render();
       return;
     }
     await signInWithGoogle();
+    state.authUser = await getSessionUser();
   } catch (error) {
     state.authLoading = false;
     state.authError = error.message || "Could not connect with Google.";
@@ -1493,7 +1567,7 @@ async function handleSignOut() {
     state.reminders = [];
     state.editingReminderName = null;
     if (state.screen === "reminder-settings") {
-      state.screen = "reminders";
+      setScreen("reminders", { historyMode: "replace" });
     }
   } catch (error) {
     state.authError = error.message || "Could not sign out.";
@@ -1529,12 +1603,33 @@ async function bootstrap() {
   state.authEmbeddedBrowser = isEmbeddedAuthBrowser();
   state.authUser = await getSessionUser();
   state.authReady = true;
+
+  window.addEventListener("popstate", (event) => {
+    if (state.loading) {
+      syncNavigationHistory("push");
+      return;
+    }
+
+    const screen = event.state?.sirseeScreen;
+    if (!screen) {
+      return;
+    }
+
+    state.screen = screen;
+    state.error = null;
+    if (screen !== "reminder-settings") {
+      state.editingReminderName = null;
+    }
+    render();
+  });
+
   if (state.authUser) {
     if (await completePendingReminderSignup()) {
       return;
     }
     await fetchReminders();
   }
+  syncNavigationHistory("replace");
   render();
 }
 

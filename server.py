@@ -81,6 +81,9 @@ NORTH_SHORE_PLACES = (
     "skokie",
 )
 LOCAL_DELIVERY_RADIUS_MILES = 7.0
+MIN_RESULT_COUNT = 3
+MAX_RESULT_COUNT = 8
+MATCH_SCORE_THRESHOLD = 145.0
 PICK_POOL_SIZE = 8
 SCORE_JITTER_RANGE = 12.0
 OSM_LINK_FETCH_TIMEOUT = 5
@@ -942,6 +945,20 @@ def merge_budget_pools(*pools: list[dict]) -> list[dict]:
     return merged
 
 
+def desired_result_count(likes: list[str]) -> int:
+    if not likes:
+        return MIN_RESULT_COUNT
+    return min(MAX_RESULT_COUNT, max(MIN_RESULT_COUNT, len(likes)))
+
+
+def strong_matches(candidates: list[dict], threshold: float = MATCH_SCORE_THRESHOLD) -> list[dict]:
+    return [item for item in candidates if float(item.get("score") or 0) >= threshold]
+
+
+def resolve_result_count(likes: list[str], eligible: list[dict]) -> int:
+    return min(desired_result_count(likes), len(eligible))
+
+
 def build_recommendations(brief: dict) -> dict:
     zip_code = str(brief.get("zipCode", "")).strip()
     if not re.fullmatch(r"\d{5}", zip_code):
@@ -951,7 +968,7 @@ def build_recommendations(brief: dict) -> dict:
     likes = brief.get("likes") or []
     budget = float(brief.get("budget") or 50)
     exclude_ids = set(brief.get("excludeIds") or [])
-    target_count = max(3, len(likes)) if likes else 0
+    desired_count = desired_result_count(likes)
 
     curated = load_curated_candidates(location)
     confident, budget_fit = prepare_budget_pool(curated, brief, location, zip_code, likes, budget)
@@ -965,11 +982,8 @@ def build_recommendations(brief: dict) -> dict:
             f"No local gift shops matched this brief within your ${int(budget)} budget. Try a higher budget or fewer likes."
         )
 
-    available = [item for item in budget_fit if item["id"] not in exclude_ids]
-    picks = select_picks_with_curated_priority(available, likes, target_count=target_count)
-
     all_budget_fit = list(budget_fit)
-    if len(picks) < target_count:
+    if len(strong_matches(budget_fit)) < desired_count:
         discovered = query_overpass(location["lat"], location["lng"], shop_types_for_likes(likes))
         for item in discovered:
             item["distanceMiles"] = round(
@@ -980,13 +994,21 @@ def build_recommendations(brief: dict) -> dict:
 
         _, osm_budget_fit = prepare_budget_pool(discovered, brief, location, zip_code, likes, budget)
         all_budget_fit = merge_budget_pools(budget_fit, osm_budget_fit)
-        used_ids = {item["id"] for item in picks}
-        available_osm = [
-            item
-            for item in osm_budget_fit
-            if item["id"] not in exclude_ids and item["id"] not in used_ids
-        ]
-        picks.extend(select_picks_with_curated_priority(available_osm, likes, target_count=target_count - len(picks)))
+
+    available = [item for item in all_budget_fit if item["id"] not in exclude_ids]
+    eligible = strong_matches(available)
+    target_count = resolve_result_count(likes, eligible)
+
+    if target_count == 0:
+        if budget_fit and exclude_ids:
+            raise ValueError(
+                "No more gift ideas within your budget and likes. Try editing your brief or raising your budget."
+            )
+        raise ValueError(
+            "We couldn't find strong enough matches for this brief. Try different likes or a higher budget."
+        )
+
+    picks = select_picks_with_curated_priority(eligible, likes, target_count=target_count)
 
     if not picks:
         if budget_fit and exclude_ids:
@@ -1002,7 +1024,9 @@ def build_recommendations(brief: dict) -> dict:
 
     pick_ids = {item["id"] for item in picks}
     remaining_ids = {
-        item["id"] for item in all_budget_fit if item["id"] not in exclude_ids and item["id"] not in pick_ids
+        item["id"]
+        for item in eligible
+        if item["id"] not in exclude_ids and item["id"] not in pick_ids
     }
     has_more = len(remaining_ids) > 0
 
@@ -1015,6 +1039,12 @@ def build_recommendations(brief: dict) -> dict:
         },
         "gifts": picks,
         "hasMore": has_more,
+        "matchMeta": {
+            "shown": len(picks),
+            "desired": desired_count,
+            "eligible": len(eligible),
+            "threshold": MATCH_SCORE_THRESHOLD,
+        },
     }
 
 
@@ -1047,7 +1077,7 @@ def supabase_rest(
     prefer: str | None = None,
 ) -> tuple[int, dict | list | None, dict[str, str]]:
     require_supabase()
-    params = urllib.parse.urlencode(query or {}, doseq=True)
+    params = encode_supabase_query(query or {})
     url = f"{SUPABASE_URL}/rest/v1/{resource}"
     if params:
         url = f"{url}?{params}"
@@ -1091,6 +1121,7 @@ def reminder_from_row(row: dict) -> dict:
     next_send_at = row.get("next_send_at") or ""
     last_sent_at = row.get("last_sent_at") or ""
     return {
+        "id": row["id"],
         "userId": row["user_id"],
         "recipientName": row["recipient_name"],
         "email": row["email"],
@@ -1224,9 +1255,37 @@ def sanitize_reminder(raw: dict, user: dict) -> dict:
     }
 
 
+POSTGREST_FILTER_PREFIXES = (
+    "eq.",
+    "neq.",
+    "gt.",
+    "gte.",
+    "lt.",
+    "lte.",
+    "like.",
+    "ilike.",
+    "is.",
+    "in.",
+    "cs.",
+    "cd.",
+)
+
+
 def postgrest_eq(value: str) -> str:
-    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
-    return f'eq."{escaped}"'
+    value = value.strip()
+    return "eq." + urllib.parse.quote(value, safe="")
+
+
+def encode_supabase_query(query: dict) -> str:
+    parts: list[str] = []
+    for key, value in query.items():
+        key_part = urllib.parse.quote(str(key), safe="")
+        value_str = str(value)
+        if value_str.startswith(POSTGREST_FILTER_PREFIXES):
+            parts.append(f"{key_part}={value_str}")
+        else:
+            parts.append(f"{key_part}={urllib.parse.quote(value_str, safe='')}")
+    return "&".join(parts)
 
 
 def find_reminder_row(token: str, recipient_name: str) -> dict | None:
@@ -1288,19 +1347,34 @@ def upsert_reminder(raw: dict, user: dict, token: str) -> dict:
     return saved
 
 
-def delete_reminder(token: str, recipient_name: str) -> bool:
+def delete_reminder(token: str, recipient_name: str, reminder_id: str | None = None) -> bool:
     recipient_name = recipient_name.strip()
-    if not recipient_name:
-        raise ValueError("Recipient name is required.")
+    reminder_id = (reminder_id or "").strip()
+    if not recipient_name and not reminder_id:
+        raise ValueError("Her name is required.")
 
-    existing = find_reminder_row(token, recipient_name)
+    existing = None
+    if reminder_id:
+        _, payload, _ = supabase_rest(
+            "GET",
+            "reminders",
+            token,
+            query={
+                "select": "*",
+                "id": f"eq.{reminder_id}",
+                "limit": "1",
+            },
+        )
+        if isinstance(payload, list) and payload:
+            existing = payload[0]
+
+    if not existing and recipient_name:
+        existing = find_reminder_row(token, recipient_name)
     if not existing:
         return False
 
     reminder = reminder_from_row(existing)
-    query = {"id": f"eq.{existing['id']}"} if existing.get("id") else {
-        "recipient_name": postgrest_eq(recipient_name)
-    }
+    query = {"id": f"eq.{existing['id']}"}
 
     status, _, headers = supabase_rest(
         "DELETE",
@@ -1363,9 +1437,10 @@ class SirseeHandler(SimpleHTTPRequestHandler):
             user, token = authenticate_request(self)
             body = json.loads(self.rfile.read(length).decode("utf-8") if length else "{}")
             recipient_name = (body.get("recipientName") or "").strip()
-            if not recipient_name:
-                raise ValueError("Recipient name is required.")
-            removed = delete_reminder(token, recipient_name)
+            reminder_id = (body.get("id") or "").strip()
+            if not recipient_name and not reminder_id:
+                raise ValueError("Her name is required.")
+            removed = delete_reminder(token, recipient_name, reminder_id)
             if not removed:
                 self._send_json({"error": "Reminder not found."}, status=HTTPStatus.NOT_FOUND)
                 return

@@ -80,9 +80,10 @@ async def remove_reminder(request: Request):
         _user, token = authenticate_headers(request.headers)
         body = await request.json()
         recipient_name = (body.get("recipientName") or "").strip()
-        if not recipient_name:
-            raise ValueError("Recipient name is required.")
-        removed = delete_reminder(token, recipient_name)
+        reminder_id = (body.get("id") or "").strip()
+        if not recipient_name and not reminder_id:
+            raise ValueError("Her name is required.")
+        removed = delete_reminder(token, recipient_name, reminder_id)
         if not removed:
             return JSONResponse({"error": "Reminder not found."}, status_code=404)
         return {"ok": True}

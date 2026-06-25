@@ -20,13 +20,23 @@ LOCAL_ORIGINS = (
     "http://localhost:4174",
     "http://localhost:4174/**",
 )
+PRODUCTION_APP_URL = "https://www.sirseegift.com"
+PRODUCTION_ORIGINS = (
+    PRODUCTION_APP_URL,
+    f"{PRODUCTION_APP_URL}/**",
+    "https://sirseegift.com",
+    "https://sirseegift.com/**",
+)
 
 
 def production_origins() -> tuple[str, ...]:
+    origins: list[str] = list(PRODUCTION_ORIGINS)
     app_url = os.environ.get("APP_URL", "").strip().rstrip("/")
-    if not app_url or "127.0.0.1" in app_url or "localhost" in app_url:
-        return ()
-    return (app_url, f"{app_url}/**")
+    if app_url and "127.0.0.1" not in app_url and "localhost" not in app_url:
+        for value in (app_url, f"{app_url}/**"):
+            if value not in origins:
+                origins.append(value)
+    return tuple(origins)
 
 
 def load_dotenv() -> None:
@@ -100,7 +110,7 @@ def site_url() -> str:
     app_url = os.environ.get("APP_URL", "").strip().rstrip("/")
     if app_url and "127.0.0.1" not in app_url and "localhost" not in app_url:
         return app_url
-    return "http://127.0.0.1:4174"
+    return PRODUCTION_APP_URL
 
 
 def main() -> int:
@@ -125,6 +135,9 @@ def main() -> int:
     print(f"Supabase callback URL: {callback}")
     print("Google Cloud OAuth client must include:")
     print("  Authorized JavaScript origins: http://127.0.0.1:4174")
+    for origin in production_origins():
+        if not origin.endswith("/**"):
+            print(f"  Authorized JavaScript origins: {origin}")
     print(f"  Authorized redirect URIs: {callback}")
     return 0
 

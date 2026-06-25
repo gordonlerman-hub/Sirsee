@@ -1,6 +1,10 @@
 # Sirsee MVP
 
-Sirsee is a clickable mobile-first MVP for spontaneous small local gift giving, starting with a Chicagoland pilot focused on artisanal shops with delivery-capable gift ideas.
+Sirsee helps Chicagoland husbands find thoughtful local gifts for their wives — one strong pick plus two backups from real artisanal shops that deliver. Mobile-first MVP, Chicagoland pilot.
+
+## Design preview
+
+Compare three visual directions before changing production styling: [design-preview.html](design-preview.html) at `http://127.0.0.1:4174/design-preview.html`. The live app ships **Option B (Evolved Sirsee)** by default.
 
 ## Run locally
 
@@ -12,12 +16,14 @@ python3 server.py
 
 Then open [http://127.0.0.1:4174](http://127.0.0.1:4174).
 
+Production: [https://www.sirseegift.com](https://www.sirseegift.com) (`sirseegift.com` redirects to `www`).
+
 ### Google sign-in
 
 Google OAuth is not enabled until you add credentials. The app code is ready; Supabase must have the Google provider turned on.
 
 1. **Google Cloud Console** → [Credentials](https://console.cloud.google.com/apis/credentials) → Create **OAuth client ID** (Web application):
-   - Authorized JavaScript origins: `http://127.0.0.1:4174`
+   - Authorized JavaScript origins: `http://127.0.0.1:4174` and `https://www.sirseegift.com`
    - Authorized redirect URI: `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`
 2. Copy `.env.example` fields into `.env`:
    - `SUPABASE_ACCESS_TOKEN` from [Supabase account tokens](https://supabase.com/dashboard/account/tokens)
@@ -28,7 +34,7 @@ Google OAuth is not enabled until you add credentials. The app code is ready; Su
 python3 scripts/configure_google_auth.py
 ```
 
-Or enable Google manually in [Supabase Auth providers](https://supabase.com/dashboard/project/vidlwghrbtzfqeawgcjx/auth/providers?provider=Google) and add `http://127.0.0.1:4174` to redirect URLs.
+Or enable Google manually in [Supabase Auth providers](https://supabase.com/dashboard/project/vidlwghrbtzfqeawgcjx/auth/providers?provider=Google) and add `http://127.0.0.1:4174` and `https://www.sirseegift.com` to redirect URLs.
 
 The server serves the static UI and exposes:
 

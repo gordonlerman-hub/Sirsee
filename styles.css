@@ -1,15 +1,15 @@
 :root {
-  --ink: #181614;
-  --muted: #625f58;
+  --ink: #141210;
+  --muted: #5a5650;
   --paper: #fcfbf7;
-  --warm: #f2eadf;
-  --cool: #e4eeec;
-  --line: #d7cfc3;
-  --accent: #2f645d;
-  --accent-deep: #1f4642;
-  --clay: #b45d43;
+  --warm: #f0e8dc;
+  --cool: #dfeae8;
+  --line: #cfc6b8;
+  --accent: #234a44;
+  --accent-deep: #1a3834;
+  --clay: #a04f38;
   --sage: #586e55;
-  --shadow: 0 18px 42px rgba(31, 28, 23, 0.12);
+  --shadow: 0 18px 42px rgba(20, 18, 16, 0.14);
 }
 
 * {
@@ -80,7 +80,7 @@ a {
   color: #fff;
   background: var(--accent-deep);
   font-weight: 800;
-  box-shadow: 0 8px 20px rgba(31, 70, 66, 0.22);
+  box-shadow: 0 8px 20px rgba(26, 56, 52, 0.24);
 }
 
 .brand-title,
@@ -543,6 +543,13 @@ p {
   margin-bottom: 10px;
 }
 
+.results-match-line {
+  max-width: 640px;
+  margin-bottom: 8px;
+  color: var(--accent-deep);
+  font-weight: 600;
+}
+
 .results-header p {
   margin-bottom: 0;
 }
@@ -724,7 +731,6 @@ p {
 }
 
 .reminder-panel,
-.saved-reminders,
 .reminders-screen,
 .reminder-settings-screen,
 .empty-reminders {
@@ -786,6 +792,18 @@ p {
   margin: 0;
   font-size: 1.05rem;
   font-weight: 600;
+}
+
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.account-sign-out-button {
+  margin-left: auto;
 }
 
 .auth-panel {
@@ -858,24 +876,6 @@ p {
 
 .reminder-frequency-group {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.saved-reminders {
-  display: grid;
-  gap: 12px;
-  padding: 16px;
-  margin-bottom: 4px;
-}
-
-.saved-reminders-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.saved-reminders-header .eyebrow {
-  margin-bottom: 0;
 }
 
 .reminder-list {

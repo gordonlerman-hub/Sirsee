@@ -78,6 +78,7 @@ def send_email(*, to: str, subject: str, html: str, text: str) -> None:
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
+            "User-Agent": "Sirsee/1.0 (transactional-email)",
         },
         method="POST",
     )
@@ -94,13 +95,13 @@ def send_email(*, to: str, subject: str, html: str, text: str) -> None:
 def _layout(*, title: str, body_html: str, body_text: str) -> tuple[str, str]:
     html = f"""<!doctype html>
 <html>
-  <body style="margin:0;padding:24px;background:#f6f1ea;font-family:Inter,Arial,sans-serif;color:#1f2a28;">
-    <div style="max-width:560px;margin:0 auto;background:#fffdf9;border:1px solid #e7ddd1;border-radius:8px;padding:24px;">
-      <p style="margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#2f645d;">Sirsee</p>
+  <body style="margin:0;padding:24px;background:#dfeae8;font-family:Inter,Arial,sans-serif;color:#141210;">
+    <div style="max-width:560px;margin:0 auto;background:#fffdf9;border:1px solid #cfc6b8;border-radius:8px;padding:24px;">
+      <p style="margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#234a44;">Sirsee</p>
       <h1 style="margin:0 0 16px;font-size:24px;line-height:1.2;">{title}</h1>
       {body_html}
-      <p style="margin:24px 0 0;color:#6d7774;font-size:13px;line-height:1.5;">
-        Small spontaneous gifts in Chicagoland.
+      <p style="margin:24px 0 0;color:#5a5650;font-size:13px;line-height:1.5;">
+        Thoughtful local gifts for your wife in Chicagoland.
       </p>
     </div>
   </body>
@@ -112,23 +113,23 @@ def _layout(*, title: str, body_html: str, body_text: str) -> tuple[str, str]:
 def send_signup_confirmation(reminder: dict) -> None:
     name = reminder["recipientName"]
     frequency = frequency_label(reminder["frequency"])
-    subject = f"You're set — Sirsee will nudge you about {name}"
+    subject = f"You're set — Sirsee will remind you about gifts for {name}"
     body_html = f"""
       <p style="margin:0 0 12px;line-height:1.6;color:#3a4543;">
-        You're signed up for gift reminders for <strong>{name}</strong>.
+        You're signed up for gift reminders for your wife, <strong>{name}</strong>.
       </p>
       <p style="margin:0 0 12px;line-height:1.6;color:#3a4543;">
-        We'll email you <strong>{frequency}</strong> with fresh Chicagoland picks matched to your brief
-        (up to ${reminder['budget']} · ZIP {reminder['zipCode']} · {reminder.get('likesSummary') or 'local surprises'}).
+        We'll email you <strong>{frequency}</strong> with fresh Chicagoland picks matched to her brief
+        (up to ${reminder['budget']} · ZIP {reminder['zipCode']} · {reminder.get('likesSummary') or 'her tastes'}).
       </p>
       <p style="margin:0;line-height:1.6;color:#3a4543;">
-        Your first nudge is on the way when your schedule hits. You can change timing or cancel anytime from your
-        <a href="{app_url()}" style="color:#2f645d;">Sirsee account</a>.
+        Your first reminder arrives when your schedule hits. You can change timing or cancel anytime from your
+        <a href="{app_url()}" style="color:#234a44;">Sirsee account</a>.
       </p>
     """
     body_text = (
-        f"You're signed up for gift reminders for {name}.\n"
-        f"We'll email you {frequency} with fresh Chicagoland picks.\n"
+        f"You're signed up for gift reminders for your wife, {name}.\n"
+        f"We'll email you {frequency} with fresh Chicagoland picks for her.\n"
         f"Manage reminders: {app_url()}"
     )
     html, text = _layout(title="Reminder confirmed", body_html=body_html, body_text=body_text)
@@ -145,24 +146,24 @@ def send_reminder_digest(reminder: dict, gifts: list[dict], location: dict) -> N
         gift_lines_html += f"""
           <li style="margin:0 0 12px;line-height:1.5;color:#3a4543;">
             <strong>{gift['name']}</strong> from {gift['merchant']} ({gift['neighborhood']}) · ${gift['price']}<br />
-            <a href="{gift['link']}" style="color:#2f645d;">View merchant</a>
+            <a href="{gift['link']}" style="color:#234a44;">View merchant</a>
           </li>
         """
         gift_lines_text += f"- {gift['name']} from {gift['merchant']} ({gift['neighborhood']}) — {gift['link']}\n"
 
     body_html = f"""
       <p style="margin:0 0 12px;line-height:1.6;color:#3a4543;">
-        Time for a small spontaneous gift for <strong>{name}</strong>. Here are fresh picks near {place}:
+        Time to surprise <strong>{name}</strong> with something thoughtful. Here are fresh picks near {place}:
       </p>
       <ul style="margin:0 0 16px;padding-left:20px;">
         {gift_lines_html}
       </ul>
       <p style="margin:0;line-height:1.6;color:#3a4543;">
-        <a href="{app_url()}" style="color:#2f645d;">Open Sirsee</a> to see more ideas or update your reminder.
+        <a href="{app_url()}" style="color:#234a44;">Open Sirsee</a> to see more ideas or update her reminder.
       </p>
     """
     body_text = (
-        f"Time for a small spontaneous gift for {name}. Fresh picks near {place}:\n"
+        f"Time to surprise {name} with something thoughtful. Fresh picks near {place}:\n"
         f"{gift_lines_text}\n"
         f"Open Sirsee: {app_url()}"
     )
@@ -175,15 +176,15 @@ def send_unsubscribe_confirmation(reminder: dict) -> None:
     subject = f"Reminders canceled for {name}"
     body_html = f"""
       <p style="margin:0 0 12px;line-height:1.6;color:#3a4543;">
-        You won't receive any more scheduled gift nudges for <strong>{name}</strong>.
+        You won't receive any more scheduled gift reminders for <strong>{name}</strong>.
       </p>
       <p style="margin:0;line-height:1.6;color:#3a4543;">
         Changed your mind? You can set a new reminder anytime from
-        <a href="{app_url()}" style="color:#2f645d;">Sirsee</a>.
+        <a href="{app_url()}" style="color:#234a44;">Sirsee</a>.
       </p>
     """
     body_text = (
-        f"You won't receive any more scheduled gift nudges for {name}.\n"
+        f"You won't receive any more scheduled gift reminders for {name}.\n"
         f"Set a new reminder anytime: {app_url()}"
     )
     html, text = _layout(title="You're unsubscribed", body_html=body_html, body_text=body_text)

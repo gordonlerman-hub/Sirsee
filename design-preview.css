@@ -1,0 +1,602 @@
+/* Design preview — three husband-for-wife directions. Not used by the live app. */
+
+.preview-page {
+  --preview-ink: #181614;
+  --preview-muted: #625f58;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 18px 48px;
+  color: var(--preview-ink);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.preview-intro {
+  max-width: 720px;
+  margin-bottom: 28px;
+}
+
+.preview-intro h1 {
+  margin: 0 0 10px;
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  line-height: 1.1;
+}
+
+.preview-intro p {
+  margin: 0;
+  color: var(--preview-muted);
+  line-height: 1.55;
+}
+
+.preview-tabs {
+  display: none;
+  gap: 8px;
+  margin-bottom: 18px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.preview-tab {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border: 1px solid #d7cfc3;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--preview-ink);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.preview-tab.is-active {
+  background: #234a44;
+  border-color: #234a44;
+  color: #fff;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.preview-column {
+  min-width: 0;
+}
+
+.preview-column-header {
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border: 1px solid #d7cfc3;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.preview-column-header h2 {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.preview-column-header p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--preview-muted);
+}
+
+.preview-pick-label {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(35, 74, 68, 0.1);
+  color: #234a44;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.preview-mockup {
+  border: 1px solid #d7cfc3;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 18px 42px rgba(31, 28, 23, 0.1);
+}
+
+.preview-mockup .mock-shell {
+  padding: 12px;
+  min-height: 520px;
+}
+
+.preview-footer {
+  margin-top: 28px;
+  padding: 16px;
+  border-radius: 8px;
+  background: rgba(228, 238, 236, 0.5);
+  color: var(--preview-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.preview-footer strong {
+  color: var(--preview-ink);
+}
+
+/* Scale mockups down slightly on desktop columns */
+.preview-mockup .mock-shell {
+  font-size: 0.92rem;
+}
+
+.preview-mockup h1 {
+  font-size: clamp(1.35rem, 4vw, 2rem) !important;
+  margin-bottom: 10px;
+}
+
+.preview-mockup .brief-screen {
+  display: grid;
+  gap: 14px;
+}
+
+.preview-mockup .brief-copy p {
+  font-size: 0.88rem;
+}
+
+.preview-mockup .brief-panel {
+  padding: 14px;
+}
+
+.preview-mockup .like-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.preview-mockup .like-tile {
+  min-height: 108px;
+}
+
+.preview-mockup .topbar {
+  margin-bottom: 12px;
+}
+
+.preview-mockup .brand-caption {
+  font-size: 0.68rem;
+}
+
+.preview-mockup .city-badge {
+  font-size: 0.68rem;
+  padding: 6px 8px;
+}
+
+/* Theme A — The Fixer */
+.theme-a {
+  --ink: #1c1f24;
+  --muted: #5c6370;
+  --paper: #f7f5f0;
+  --warm: #ebe6dc;
+  --cool: #e8eaed;
+  --line: #c8cdd4;
+  --accent: #b8860b;
+  --accent-deep: #1c1f24;
+  --clay: #b8860b;
+  --shadow: 0 14px 36px rgba(28, 31, 36, 0.14);
+  font-family: "DM Sans", Inter, ui-sans-serif, sans-serif;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--cool) 0, var(--paper) 55%, var(--warm) 100%);
+}
+
+.theme-a .brand-mark {
+  background: var(--accent-deep);
+  box-shadow: 0 8px 20px rgba(28, 31, 36, 0.25);
+}
+
+.theme-a .eyebrow,
+.theme-a .city-badge {
+  color: var(--accent-deep);
+}
+
+.theme-a .city-badge {
+  border-color: rgba(28, 31, 36, 0.2);
+}
+
+.theme-a .promise-list span {
+  color: var(--accent-deep);
+  border-color: rgba(28, 31, 36, 0.15);
+}
+
+.theme-a .segment.is-selected,
+.theme-a .primary {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+}
+
+.theme-a .segment.is-selected {
+  color: #fff;
+}
+
+.theme-a .primary {
+  color: #fff;
+}
+
+.theme-a .like-tile.is-selected {
+  border-color: var(--accent);
+  background: linear-gradient(180deg, rgba(232, 234, 237, 0.98) 0, #fff 100%);
+  box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.25);
+}
+
+.theme-a .like-tile.is-selected::after {
+  background: var(--accent);
+}
+
+.theme-a h1,
+.theme-a h2,
+.theme-a .field-title {
+  font-family: "DM Sans", Inter, sans-serif;
+}
+
+/* Theme B — Evolved Sirsee */
+.theme-b {
+  --ink: #141210;
+  --muted: #5a5650;
+  --paper: #fcfbf7;
+  --warm: #f0e8dc;
+  --cool: #dfeae8;
+  --line: #cfc6b8;
+  --accent: #234a44;
+  --accent-deep: #1a3834;
+  --clay: #a04f38;
+  --shadow: 0 18px 42px rgba(20, 18, 16, 0.14);
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--cool) 0, var(--paper) 42%, var(--warm) 100%);
+}
+
+.theme-b .brand-mark {
+  background: var(--accent-deep);
+  box-shadow: 0 8px 20px rgba(26, 56, 52, 0.24);
+}
+
+.theme-b .eyebrow,
+.theme-b .city-badge {
+  color: var(--accent-deep);
+}
+
+.theme-b .segment.is-selected,
+.theme-b .primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.theme-b .like-tile.is-selected {
+  border-color: var(--accent-deep);
+  box-shadow: 0 0 0 3px rgba(35, 74, 68, 0.28);
+}
+
+.theme-b .like-tile.is-selected::after {
+  background: var(--accent-deep);
+}
+
+/* Theme C — She'll Notice */
+.theme-c {
+  --ink: #3d2228;
+  --muted: #7a5a62;
+  --paper: #fffdf9;
+  --warm: #f5e8ea;
+  --cool: #f8ecee;
+  --line: #e8d4d8;
+  --accent: #9e6b5a;
+  --accent-deep: #6b3344;
+  --clay: #6b3344;
+  --shadow: 0 16px 40px rgba(107, 51, 68, 0.12);
+  font-family: Inter, ui-sans-serif, sans-serif;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--cool) 0, var(--paper) 48%, var(--warm) 100%);
+}
+
+.theme-c h1,
+.theme-c h2,
+.theme-c .eyebrow {
+  font-family: Fraunces, Georgia, serif;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: -0.01em;
+}
+
+.theme-c .eyebrow {
+  font-size: 0.82rem;
+  text-transform: none;
+  font-weight: 600;
+  color: var(--accent-deep);
+}
+
+.theme-c .brand-mark {
+  background: var(--accent-deep);
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(107, 51, 68, 0.22);
+}
+
+.theme-c .brief-panel,
+.theme-c .promise-list span {
+  border-radius: 12px;
+}
+
+.theme-c .segment.is-selected,
+.theme-c .primary {
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+  color: #fff;
+  border-radius: 10px;
+}
+
+.theme-c .like-tile {
+  border-radius: 10px;
+}
+
+.theme-c .like-tile.is-selected {
+  border-color: var(--accent-deep);
+  background: linear-gradient(180deg, rgba(248, 236, 238, 0.98) 0, #fff 100%);
+}
+
+.theme-c .like-tile.is-selected::after {
+  background: var(--accent-deep);
+}
+
+.theme-c .city-badge {
+  color: var(--accent-deep);
+  border-color: rgba(107, 51, 68, 0.2);
+}
+
+/* Shared mockup component styles (mirror styles.css) */
+.mock-shell .topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mock-shell .brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.mock-shell .brand-mark {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.mock-shell .brand-title {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.mock-shell .brand-caption {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.mock-shell .city-badge {
+  flex-shrink: 0;
+  padding: 6px 8px;
+  border: 1px solid rgba(47, 100, 93, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.76);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.mock-shell .eyebrow {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.mock-shell h1 {
+  margin: 0 0 10px;
+  line-height: 0.98;
+  font-weight: 800;
+}
+
+.mock-shell h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.mock-shell p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.mock-shell .promise-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.mock-shell .promise-list span {
+  padding: 6px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.mock-shell .brief-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 253, 249, 0.92);
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 12px;
+}
+
+.mock-shell .section-heading {
+  display: grid;
+  gap: 4px;
+}
+
+.mock-shell .field-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.mock-shell .field {
+  display: grid;
+  gap: 5px;
+}
+
+.mock-shell .field-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.mock-shell .input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.mock-shell .segment-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.mock-shell .segment {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.mock-shell .segment.is-selected {
+  color: #fff;
+}
+
+.mock-shell .like-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.mock-shell .like-tile {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  padding: 6px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  text-align: left;
+}
+
+.mock-shell .like-tile img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #eadfd4;
+}
+
+.mock-shell .like-tile span {
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.mock-shell .like-tile.is-selected::after {
+  content: "✓";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.mock-shell .primary {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+@media (max-width: 1100px) {
+  .preview-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .preview-tabs {
+    display: flex;
+  }
+
+  .preview-column:not(:target) {
+    display: none;
+  }
+
+  .preview-column:target,
+  .preview-column:first-child {
+    display: block;
+  }
+
+  #theme-a:target ~ .preview-grid .preview-column,
+  .preview-page:has(#theme-a:target) .preview-column {
+    display: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .preview-page:has(#theme-a:target) #col-a,
+  .preview-page:has(#theme-b:target) #col-b,
+  .preview-page:has(#theme-c:target) #col-c {
+    display: block;
+  }
+
+  .preview-page:has(#theme-a:target) #col-b,
+  .preview-page:has(#theme-a:target) #col-c,
+  .preview-page:has(#theme-b:target) #col-a,
+  .preview-page:has(#theme-b:target) #col-c,
+  .preview-page:has(#theme-c:target) #col-a,
+  .preview-page:has(#theme-c:target) #col-b {
+    display: none;
+  }
+}
+
+@media (min-width: 1101px) {
+  .preview-column {
+    display: block !important;
+  }
+}
